@@ -61,6 +61,21 @@ class ApiService {
       const data = await response.json();
 
       if (!response.ok) {
+        // If backend returns validation errors, format them nicely
+        if (data.errors) {
+          const errorMessages = Object.entries(data.errors)
+            .map(([field, messages]) => {
+              // Handle different error formats
+              if (Array.isArray(messages)) {
+                return `${field}: ${messages.join(', ')}`;
+              } else if (typeof messages === 'string') {
+                return `${field}: ${messages}`;
+              }
+              return `${field}: ${JSON.stringify(messages)}`;
+            })
+            .join('; ');
+          throw new Error(errorMessages || data.message || data.error || `HTTP ${response.status}`);
+        }
         throw new Error(data.message || data.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
@@ -149,18 +164,27 @@ class ApiService {
 
   async register(data: RegisterData): Promise<AuthResponse> {
     try {
+      console.log('Sending registration data:', {
+        auth: {  // Changed from 'user' to 'auth'
+          first_name: data.firstName,
+          last_name: data.lastName,
+          email: data.email,
+          password: data.password
+        }
+      });
+
       const response = await this.request<ApiResponse<{
         user: any;
         token: string;
       }>>('/auth/register', {
         method: 'POST',
         body: JSON.stringify({
-          user: {
+          auth: {  // Changed from 'user' to 'auth' to match backend
             first_name: data.firstName,
             last_name: data.lastName,
             email: data.email,
-            password: data.password,
-            password_confirmation: data.confirmPassword
+            password: data.password
+            // Note: backend doesn't use password_confirmation
           }
         }),
       });
@@ -179,6 +203,10 @@ class ApiService {
       };
     } catch (error) {
       console.error('Registration error:', error);
+      // Log more details if available
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+      }
       throw error;
     }
   }
@@ -344,12 +372,22 @@ class ApiService {
   // Health check endpoint
   async healthCheck(): Promise<boolean> {
     try {
-      const response = await this.request<ApiResponse>('/health', {
+      // Your backend has health check at root path (not /api/v1/health)
+      const baseUrl = this.baseURL.replace('/api/v1', '');
+      const response = await fetch(`${baseUrl}/`, {
         method: 'GET',
+        signal: AbortSignal.timeout(5000),
       });
-      return response.success;
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Check for common health check response formats
+        return data.status === 'ok' || data.success === true || response.status === 200;
+      }
+      
+      return false;
     } catch (error) {
-      console.error('Health check failed:', error);
+      console.warn('Backend connection check failed:', error);
       return false;
     }
   }
