@@ -100,8 +100,8 @@ const LandingPage: React.FC = () => {
           
           <FloatingCard delay={400}>
             <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-              Transform how you manage money with AI-powered insights, 
-              real-time tracking, and personalized recommendations that adapt to your lifestyle.
+              Transform how you manage money with real-time tracking, smart budgeting, 
+               insights and personalized recommendations that adapt to your lifestyle.
             </p>
           </FloatingCard>
 

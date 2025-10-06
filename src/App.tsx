@@ -9,10 +9,10 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ProfilePage from './pages/ProfilePage';
+import DashboardPage from './pages/dashboard/DashboardPage';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
-import DashboardPlaceholder from './components/DashboardPlaceholder';
 import ApiConnectionStatus from './components/ApiConnectionStatus';
 
 function App() {
@@ -37,10 +37,10 @@ function App() {
               </ProtectedRoute>
             } />
             
-            {/* Temporary Dashboard Route - will be replaced later */}
+            {/* Dashboard Route - Updated with new DashboardPage */}
             <Route path="/dashboard" element={
               <ProtectedRoute>
-                <DashboardPlaceholder />
+                <DashboardPage />
               </ProtectedRoute>
             } />
             

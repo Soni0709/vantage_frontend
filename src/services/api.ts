@@ -6,7 +6,12 @@ import type {
   PasswordResetConfirm,
   PasswordChangeRequest,
   ProfileUpdateData,
-  User
+  User,
+  Transaction,
+  CreateTransactionData,
+  UpdateTransactionData,
+  TransactionFilters,
+  TransactionSummary
 } from '../types';
 
 // Base API configuration
@@ -14,7 +19,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001
 const API_TIMEOUT = 10000; // 10 seconds
 
 // API Response interface based on your backend structure
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   success: boolean;
   message: string;
   data?: T;
@@ -50,8 +55,13 @@ class ApiService {
 
     // Add auth token if available
     const token = localStorage.getItem('vantage_token');
-    if (token && !config.headers?.['Authorization']) {
-      (config.headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+    if (token) {
+      if (!config.headers || config.headers instanceof Headers) {
+        config.headers = { 'Content-Type': 'application/json' };
+      }
+      if (!(config.headers as Record<string, string>)['Authorization']) {
+        (config.headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+      }
     }
 
     try {
@@ -132,7 +142,7 @@ class ApiService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
       const response = await this.request<ApiResponse<{
-        user: any;
+        user: User;
         token: string;
       }>>('/auth/login', {
         method: 'POST',
@@ -174,7 +184,7 @@ class ApiService {
       });
 
       const response = await this.request<ApiResponse<{
-        user: any;
+        user: User;
         token: string;
       }>>('/auth/register', {
         method: 'POST',
@@ -311,7 +321,7 @@ class ApiService {
   async updateProfile(data: ProfileUpdateData): Promise<User> {
     try {
       const response = await this.request<ApiResponse<{
-        user: any;
+        user: User;
       }>>('/users/profile', {
         method: 'PUT',
         body: JSON.stringify({
@@ -338,7 +348,7 @@ class ApiService {
   async getCurrentUser(): Promise<User> {
     try {
       const response = await this.request<ApiResponse<{
-        user: any;
+        user: User;
       }>>('/users/profile', {
         method: 'GET',
       });
@@ -389,6 +399,196 @@ class ApiService {
     } catch (error) {
       console.warn('Backend connection check failed:', error);
       return false;
+    }
+  }
+
+  // Transform backend transaction format to frontend format
+  private transformTransaction(backendTransaction: any): Transaction {
+    return {
+      id: backendTransaction.id,
+      userId: backendTransaction.user_id,
+      type: backendTransaction.transaction_type,
+      amount: parseFloat(backendTransaction.amount),
+      description: backendTransaction.description,
+      category: backendTransaction.category,
+      date: backendTransaction.transaction_date,
+      notes: backendTransaction.notes || undefined,
+      createdAt: backendTransaction.created_at,
+      updatedAt: backendTransaction.updated_at,
+    };
+  }
+
+  // Transaction endpoints
+  async createTransaction(data: CreateTransactionData): Promise<Transaction> {
+    try {
+      const response = await this.request<ApiResponse<{
+        transaction: any;
+      }>>('/transactions', {
+        method: 'POST',
+        body: JSON.stringify({
+          transaction: {
+            transaction_type: data.type,
+            amount: data.amount,
+            description: data.description,
+            category: data.category,
+            transaction_date: data.date,
+            notes: data.notes || null
+          }
+        }),
+      });
+
+      if (!response.success || !response.data) {
+        throw new Error(response.message || 'Transaction creation failed');
+      }
+
+      return this.transformTransaction(response.data.transaction);
+    } catch (error) {
+      console.error('Create transaction error:', error);
+      throw error;
+    }
+  }
+
+  async getTransactions(filters?: TransactionFilters): Promise<Transaction[]> {
+    try {
+      // Build query params
+      const params = new URLSearchParams();
+      if (filters?.type) params.append('type', filters.type);
+      if (filters?.category) params.append('category', filters.category);
+      if (filters?.startDate) params.append('start_date', filters.startDate);
+      if (filters?.endDate) params.append('end_date', filters.endDate);
+      if (filters?.minAmount) params.append('min_amount', filters.minAmount.toString());
+      if (filters?.maxAmount) params.append('max_amount', filters.maxAmount.toString());
+      if (filters?.search) params.append('search', filters.search);
+
+      const queryString = params.toString();
+      const endpoint = queryString ? `/transactions?${queryString}` : '/transactions';
+
+      const response = await this.request<ApiResponse<{
+        transactions: any[];
+      }>>(endpoint, {
+        method: 'GET',
+      });
+
+      if (!response.success || !response.data) {
+        throw new Error(response.message || 'Failed to fetch transactions');
+      }
+
+      return response.data.transactions.map(t => this.transformTransaction(t));
+    } catch (error) {
+      console.error('Get transactions error:', error);
+      throw error;
+    }
+  }
+
+  async getTransaction(id: string): Promise<Transaction> {
+    try {
+      const response = await this.request<ApiResponse<{
+        transaction: any;
+      }>>(`/transactions/${id}`, {
+        method: 'GET',
+      });
+
+      if (!response.success || !response.data) {
+        throw new Error(response.message || 'Failed to fetch transaction');
+      }
+
+      return this.transformTransaction(response.data.transaction);
+    } catch (error) {
+      console.error('Get transaction error:', error);
+      throw error;
+    }
+  }
+
+  async updateTransaction(id: string, data: UpdateTransactionData): Promise<Transaction> {
+    try {
+      const updateData: any = {};
+      if (data.type !== undefined) updateData.transaction_type = data.type;
+      if (data.amount !== undefined) updateData.amount = data.amount;
+      if (data.description !== undefined) updateData.description = data.description;
+      if (data.category !== undefined) updateData.category = data.category;
+      if (data.date !== undefined) updateData.transaction_date = data.date;
+      if (data.notes !== undefined) updateData.notes = data.notes;
+
+      const response = await this.request<ApiResponse<{
+        transaction: any;
+      }>>(`/transactions/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          transaction: updateData
+        }),
+      });
+
+      if (!response.success || !response.data) {
+        throw new Error(response.message || 'Transaction update failed');
+      }
+
+      return this.transformTransaction(response.data.transaction);
+    } catch (error) {
+      console.error('Update transaction error:', error);
+      throw error;
+    }
+  }
+
+  async deleteTransaction(id: string): Promise<void> {
+    try {
+      const response = await this.request<ApiResponse>(`/transactions/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.success) {
+        throw new Error(response.message || 'Transaction deletion failed');
+      }
+    } catch (error) {
+      console.error('Delete transaction error:', error);
+      throw error;
+    }
+  }
+
+  async getTransactionSummary(startDate?: string, endDate?: string): Promise<TransactionSummary> {
+    try {
+      const params = new URLSearchParams();
+      if (startDate) params.append('start_date', startDate);
+      if (endDate) params.append('end_date', endDate);
+
+      const queryString = params.toString();
+      const endpoint = queryString ? `/transactions/summary?${queryString}` : '/transactions/summary';
+
+      const response = await this.request<ApiResponse<{
+        summary: any;
+      }>>(endpoint, {
+        method: 'GET',
+      });
+
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to fetch transaction summary');
+      }
+
+      // Handle case where data or summary might be undefined
+      const summary = response.data?.summary || {};
+      
+      return {
+        totalIncome: parseFloat(summary.total_income || '0'),
+        totalExpenses: parseFloat(summary.total_expenses || '0'),
+        balance: parseFloat(summary.balance || '0'),
+        transactionCount: parseInt(summary.transaction_count || '0', 10),
+        period: {
+          startDate: summary.start_date || startDate || '',
+          endDate: summary.end_date || endDate || '',
+        },
+      };
+    } catch (error) {
+      console.error('Get transaction summary error:', error);
+      // Return empty summary instead of throwing
+      return {
+        totalIncome: 0,
+        totalExpenses: 0,
+        balance: 0,
+        transactionCount: 0,
+        period: {
+          startDate: startDate || '',
+          endDate: endDate || '',
+        },
+      };
     }
   }
 }

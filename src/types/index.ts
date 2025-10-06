@@ -1,5 +1,6 @@
 // Test that all exports are working
 export * from './auth';
+export * from './transaction';
 
 // Re-export key types explicitly to ensure they're available
 export type {
@@ -16,3 +17,11 @@ export type {
   PreferencesUpdateData,
   UserPreferences
 } from './auth';
+
+export type {
+  Transaction,
+  CreateTransactionData,
+  UpdateTransactionData,
+  TransactionFilters,
+  TransactionSummary
+} from './transaction';
