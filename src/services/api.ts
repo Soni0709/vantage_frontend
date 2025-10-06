@@ -11,7 +11,10 @@ import type {
   CreateTransactionData,
   UpdateTransactionData,
   TransactionFilters,
-  TransactionSummary
+  TransactionSummary,
+  BackendTransaction,
+  BackendTransactionSummary,
+  BackendUser
 } from '../types';
 
 // Base API configuration
@@ -105,7 +108,7 @@ class ApiService {
   }
 
   // Transform backend user format to frontend format
-  private transformUser(backendUser: any): User {
+  private transformUser(backendUser: BackendUser): User {
     return {
       id: backendUser.id,
       email: backendUser.email,
@@ -130,7 +133,7 @@ class ApiService {
           profileVisibility: 'private',
           shareAnalytics: false,
         },
-        ...backendUser.preferences
+        ...(backendUser.preferences as Record<string, unknown> || {})
       },
       createdAt: backendUser.created_at,
       updatedAt: backendUser.updated_at || backendUser.created_at,
@@ -142,7 +145,7 @@ class ApiService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
       const response = await this.request<ApiResponse<{
-        user: User;
+        user: BackendUser;
         token: string;
       }>>('/auth/login', {
         method: 'POST',
@@ -184,7 +187,7 @@ class ApiService {
       });
 
       const response = await this.request<ApiResponse<{
-        user: User;
+        user: BackendUser;
         token: string;
       }>>('/auth/register', {
         method: 'POST',
@@ -321,7 +324,7 @@ class ApiService {
   async updateProfile(data: ProfileUpdateData): Promise<User> {
     try {
       const response = await this.request<ApiResponse<{
-        user: User;
+        user: BackendUser;
       }>>('/users/profile', {
         method: 'PUT',
         body: JSON.stringify({
@@ -348,7 +351,7 @@ class ApiService {
   async getCurrentUser(): Promise<User> {
     try {
       const response = await this.request<ApiResponse<{
-        user: User;
+        user: BackendUser;
       }>>('/users/profile', {
         method: 'GET',
       });
@@ -403,16 +406,23 @@ class ApiService {
   }
 
   // Transform backend transaction format to frontend format
-  private transformTransaction(backendTransaction: any): Transaction {
+  private transformTransaction(backendTransaction: BackendTransaction): Transaction {
+    // Safely extract notes from metadata
+    let notes: string | undefined;
+    if (backendTransaction.metadata && typeof backendTransaction.metadata === 'object') {
+      const meta = backendTransaction.metadata as { notes?: string };
+      notes = meta.notes;
+    }
+
     return {
       id: backendTransaction.id,
-      userId: backendTransaction.user_id,
-      type: backendTransaction.transaction_type,
-      amount: parseFloat(backendTransaction.amount),
+      userId: '', // Backend doesn't return user_id in response
+      type: backendTransaction.type, // Backend uses 'type' not 'transaction_type'
+      amount: parseFloat(backendTransaction.amount.toString()),
       description: backendTransaction.description,
       category: backendTransaction.category,
       date: backendTransaction.transaction_date,
-      notes: backendTransaction.notes || undefined,
+      notes, // Extracted from metadata
       createdAt: backendTransaction.created_at,
       updatedAt: backendTransaction.updated_at,
     };
@@ -422,17 +432,17 @@ class ApiService {
   async createTransaction(data: CreateTransactionData): Promise<Transaction> {
     try {
       const response = await this.request<ApiResponse<{
-        transaction: any;
+        transaction: BackendTransaction;
       }>>('/transactions', {
         method: 'POST',
         body: JSON.stringify({
           transaction: {
-            transaction_type: data.type,
+            type: data.type, // Backend expects 'type' not 'transaction_type'
             amount: data.amount,
             description: data.description,
             category: data.category,
             transaction_date: data.date,
-            notes: data.notes || null
+            metadata: data.notes ? { notes: data.notes } : {} // Backend uses metadata
           }
         }),
       });
@@ -464,7 +474,7 @@ class ApiService {
       const endpoint = queryString ? `/transactions?${queryString}` : '/transactions';
 
       const response = await this.request<ApiResponse<{
-        transactions: any[];
+        transactions: BackendTransaction[];
       }>>(endpoint, {
         method: 'GET',
       });
@@ -483,7 +493,7 @@ class ApiService {
   async getTransaction(id: string): Promise<Transaction> {
     try {
       const response = await this.request<ApiResponse<{
-        transaction: any;
+        transaction: BackendTransaction;
       }>>(`/transactions/${id}`, {
         method: 'GET',
       });
@@ -501,16 +511,24 @@ class ApiService {
 
   async updateTransaction(id: string, data: UpdateTransactionData): Promise<Transaction> {
     try {
-      const updateData: any = {};
-      if (data.type !== undefined) updateData.transaction_type = data.type;
+      const updateData: Partial<{
+        type: string;
+        amount: number;
+        description: string;
+        category: string;
+        transaction_date: string;
+        metadata: Record<string, unknown>;
+      }> = {};
+      
+      if (data.type !== undefined) updateData.type = data.type; // Backend uses 'type'
       if (data.amount !== undefined) updateData.amount = data.amount;
       if (data.description !== undefined) updateData.description = data.description;
       if (data.category !== undefined) updateData.category = data.category;
       if (data.date !== undefined) updateData.transaction_date = data.date;
-      if (data.notes !== undefined) updateData.notes = data.notes;
+      if (data.notes !== undefined) updateData.metadata = { notes: data.notes }; // Backend uses metadata
 
       const response = await this.request<ApiResponse<{
-        transaction: any;
+        transaction: BackendTransaction;
       }>>(`/transactions/${id}`, {
         method: 'PUT',
         body: JSON.stringify({
@@ -553,9 +571,7 @@ class ApiService {
       const queryString = params.toString();
       const endpoint = queryString ? `/transactions/summary?${queryString}` : '/transactions/summary';
 
-      const response = await this.request<ApiResponse<{
-        summary: any;
-      }>>(endpoint, {
+      const response = await this.request<ApiResponse<BackendTransactionSummary>>(endpoint, {
         method: 'GET',
       });
 
@@ -563,17 +579,17 @@ class ApiService {
         throw new Error(response.message || 'Failed to fetch transaction summary');
       }
 
-      // Handle case where data or summary might be undefined
-      const summary = response.data?.summary || {};
+      // Backend returns data directly, not nested in 'summary'
+      const data = response.data || {} as BackendTransactionSummary;
       
       return {
-        totalIncome: parseFloat(summary.total_income || '0'),
-        totalExpenses: parseFloat(summary.total_expenses || '0'),
-        balance: parseFloat(summary.balance || '0'),
-        transactionCount: parseInt(summary.transaction_count || '0', 10),
+        totalIncome: parseFloat(data.total_income?.toString() || '0'),
+        totalExpenses: parseFloat(data.total_expense?.toString() || '0'), // Backend uses 'total_expense' not 'total_expenses'
+        balance: parseFloat(data.balance?.toString() || '0'),
+        transactionCount: parseInt(data.transaction_count?.toString() || '0', 10),
         period: {
-          startDate: summary.start_date || startDate || '',
-          endDate: summary.end_date || endDate || '',
+          startDate: startDate || '',
+          endDate: endDate || '',
         },
       };
     } catch (error) {

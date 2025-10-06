@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
 import type { 
   AuthState, 
   LoginCredentials, 
@@ -6,9 +7,7 @@ import type {
   PasswordResetRequest,
   PasswordResetConfirm,
   PasswordChangeRequest,
-  ProfileUpdateData,
-  PreferencesUpdateData,
-  User 
+  ProfileUpdateData
 } from '../../types';
 import { apiService } from '../../services/api';
 
@@ -152,6 +151,9 @@ export const updateProfile = createAsyncThunk(
   }
 );
 
+// Note: updatePreferences is not implemented in API service yet
+// Uncomment when API method is ready
+/*
 export const updatePreferences = createAsyncThunk(
   'auth/updatePreferences',
   async (data: PreferencesUpdateData, { rejectWithValue }) => {
@@ -164,6 +166,7 @@ export const updatePreferences = createAsyncThunk(
     }
   }
 );
+*/
 
 export const refreshAuthToken = createAsyncThunk(
   'auth/refreshToken',
@@ -283,7 +286,7 @@ const authSlice = createSlice({
       })
       
       // Logout cases
-      .addCase(logoutUser.fulfilled, (state) => {
+      .addCase(logoutUser.fulfilled, () => {
         return { ...initialState };
       })
       
@@ -346,16 +349,19 @@ const authSlice = createSlice({
       })
       
       // Preferences update cases
+      // Commented out until API method is implemented
+      /*
       .addCase(updatePreferences.fulfilled, (state, action) => {
         state.user = action.payload;
       })
+      */
       
       // Token refresh cases
       .addCase(refreshAuthToken.fulfilled, (state, action) => {
         state.token = action.payload.token;
         state.tokenExpiresAt = Date.now() + action.payload.expiresIn;
       })
-      .addCase(refreshAuthToken.rejected, (state) => {
+      .addCase(refreshAuthToken.rejected, () => {
         return { ...initialState };
       })
       

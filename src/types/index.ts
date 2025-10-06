@@ -23,5 +23,8 @@ export type {
   CreateTransactionData,
   UpdateTransactionData,
   TransactionFilters,
-  TransactionSummary
+  TransactionSummary,
+  BackendTransaction,
+  BackendTransactionSummary,
+  BackendUser
 } from './transaction';
