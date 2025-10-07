@@ -10,6 +10,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ProfilePage from './pages/ProfilePage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import RecurringTransactionsPage from './pages/RecurringTransactionsPage';
+import TransactionsPage from './pages/transactions/TransactionsPage';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -43,6 +44,13 @@ function App() {
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            } />
+            
+            {/* Transactions Route */}
+            <Route path="/transactions" element={
+              <ProtectedRoute>
+                <TransactionsPage />
               </ProtectedRoute>
             } />
             
