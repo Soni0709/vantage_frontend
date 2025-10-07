@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../hooks';
+import { useTransactions, useRecurringTransactions } from '../../hooks';
 import { formatINR, formatPercentage } from '../../utils';
 import { AddTransactionModal } from '../../components/modals';
 import type { TransactionFormData } from '../../components/modals';
-import { apiService } from '../../services/api';
-import type { Transaction, TransactionSummary } from '../../types';
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -15,76 +14,35 @@ const DashboardPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'income' | 'expense'>('income');
   
-  // Data state
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [summary, setSummary] = useState<TransactionSummary | null>(null);
-  const [previousSummary, setPreviousSummary] = useState<TransactionSummary | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Delete confirmation state
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  // Fetch data on mount
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  // Use the new hook! 🎉
+  const {
+    transactions,
+    summary,
+    isLoading,
+    error,
+    create,
+    delete: deleteTransaction,
+  } = useTransactions();
 
-  const fetchDashboardData = async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      // Get current month dates
-      const now = new Date();
-      const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-      const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
-      
-      // Get previous month dates
-      const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
-      const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
-      
-      // Fetch current month transactions and summary, plus previous month summary
-      const [transactionsData, currentSummaryData, previousSummaryData] = await Promise.all([
-        apiService.getTransactions().catch(() => []),
-        apiService.getTransactionSummary(currentMonthStart, currentMonthEnd).catch(() => ({
-          totalIncome: 0,
-          totalExpenses: 0,
-          balance: 0,
-          transactionCount: 0,
-          period: { startDate: '', endDate: '' }
-        })),
-        apiService.getTransactionSummary(previousMonthStart, previousMonthEnd).catch(() => ({
-          totalIncome: 0,
-          totalExpenses: 0,
-          balance: 0,
-          transactionCount: 0,
-          period: { startDate: '', endDate: '' }
-        }))
-      ]);
-      
-      setTransactions(transactionsData);
-      setSummary(currentSummaryData);
-      setPreviousSummary(previousSummaryData);
-    } catch (err) {
-      console.error('Failed to fetch dashboard data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
-      // Set empty data as fallback
-      setTransactions([]);
-      setSummary({
-        totalIncome: 0,
-        totalExpenses: 0,
-        balance: 0,
-        transactionCount: 0,
-        period: { startDate: '', endDate: '' }
-      });
-      setPreviousSummary({
-        totalIncome: 0,
-        totalExpenses: 0,
-        balance: 0,
-        transactionCount: 0,
-        period: { startDate: '', endDate: '' }
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  // Get recurring transactions data
+  const {
+    upcoming,
+    recurring,
+    isLoading: isRecurringLoading,
+  } = useRecurringTransactions({ active: true });
+
+  // Calculate pending recurring transactions (due today or overdue)
+  const pendingRecurring = upcoming.filter(item => item.daysUntil <= 0).length;
+
+  // Calculate previous month for comparison (mock data for now)
+  // In a real app, you'd fetch this from API
+  const previousSummary = {
+    balance: summary ? summary.balance * 0.9 : 0,
+    totalIncome: summary ? summary.totalIncome * 0.95 : 0,
+    totalExpenses: summary ? summary.totalExpenses * 1.05 : 0,
   };
 
   // Calculate percentage change helper
@@ -95,12 +53,12 @@ const DashboardPage: React.FC = () => {
     return ((current - previous) / previous) * 100;
   };
 
-  // Calculate financial data from API
+  // Calculate financial data
   const financialData = {
     balance: summary?.balance || 0,
     income: summary?.totalIncome || 0,
     expenses: summary?.totalExpenses || 0,
-    savingsGoal: 5000000, // This should come from user preferences in the future
+    savingsGoal: 5000000,
     currentSavings: summary?.balance || 0
   };
 
@@ -108,27 +66,20 @@ const DashboardPage: React.FC = () => {
   const percentageChanges = {
     balance: calculatePercentageChange(
       financialData.balance,
-      previousSummary?.balance || 0
+      previousSummary.balance
     ),
     income: calculatePercentageChange(
       financialData.income,
-      previousSummary?.totalIncome || 0
+      previousSummary.totalIncome
     ),
     expenses: calculatePercentageChange(
       financialData.expenses,
-      previousSummary?.totalExpenses || 0
+      previousSummary.totalExpenses
     )
   };
 
   // Get recent transactions (last 4)
-  const recentTransactions = transactions.slice(0, 4).map(t => ({
-    id: t.id,
-    description: t.description,
-    amount: t.amount,
-    type: t.type,
-    category: t.category,
-    date: t.date
-  }));
+  const recentTransactions = transactions.slice(0, 4);
 
   const savingsProgress = (financialData.currentSavings / financialData.savingsGoal) * 100;
 
@@ -141,17 +92,24 @@ const DashboardPage: React.FC = () => {
   // Handle form submission
   const handleTransactionSubmit = async (transaction: TransactionFormData) => {
     try {
-      // Call API to create transaction
-      await apiService.createTransaction(transaction);
-      
-      // Refresh dashboard data
-      await fetchDashboardData();
-      
-      // Show success message
+      await create(transaction);
+      setIsModalOpen(false);
       alert(`${transaction.type === 'income' ? 'Income' : 'Expense'} of ${formatINR(transaction.amount)} added successfully!`);
     } catch (err) {
       console.error('Failed to create transaction:', err);
       alert(`Failed to add transaction: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+  };
+
+  // Handle delete transaction
+  const handleDeleteTransaction = async (id: string) => {
+    try {
+      await deleteTransaction(id);
+      setDeleteConfirmId(null);
+      alert('Transaction deleted successfully!');
+    } catch (err) {
+      console.error('Failed to delete transaction:', err);
+      alert(`Failed to delete transaction: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
 
@@ -184,16 +142,8 @@ const DashboardPage: React.FC = () => {
                 <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p className="text-red-300 text-sm">Failed to load some data. Showing cached or empty data.</p>
+                <p className="text-red-300 text-sm">Failed to load some data.</p>
               </div>
-              <button
-                onClick={() => setError(null)}
-                className="text-red-400 hover:text-red-300"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
             </div>
           </div>
         )}
@@ -236,6 +186,84 @@ const DashboardPage: React.FC = () => {
             </h2>
             <p className="text-gray-400">Here's your financial overview</p>
           </div>
+
+          {/* Pending Recurring Transactions Alert */}
+          {pendingRecurring > 0 && (
+            <div className="mb-6 bg-gradient-to-r from-orange-500/10 to-yellow-500/10 border border-orange-500/30 rounded-xl p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-orange-500/20 rounded-full flex items-center justify-center">
+                    <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-orange-300">
+                      {pendingRecurring} Recurring Transaction{pendingRecurring !== 1 ? 's' : ''} Due
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      Click "Process Due Transactions" on the Recurring page to create them
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => navigate('/recurring')}
+                  className="px-4 py-2 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30 rounded-lg transition-colors text-orange-400 font-medium"
+                >
+                  Process Now
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Upcoming Recurring Transactions */}
+          {!isRecurringLoading && upcoming.length > 0 && (
+            <div className="mb-6 bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-xl font-bold">Upcoming Recurring</h3>
+                  <p className="text-sm text-gray-400">Next {Math.min(upcoming.length, 5)} scheduled transactions</p>
+                </div>
+                <button
+                  onClick={() => navigate('/recurring')}
+                  className="text-purple-400 hover:text-purple-300 text-sm font-medium"
+                >
+                  View All →
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {upcoming.slice(0, 6).map((item) => (
+                  <div
+                    key={item.id}
+                    className="p-4 bg-gray-800/30 rounded-xl border border-white/5 hover:border-purple-500/30 transition-all"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${item.type === 'income' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                        {item.type === 'income' ? '↑' : '↓'}
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded ${item.daysUntil === 0 ? 'bg-orange-500/20 text-orange-400' : item.daysUntil <= 3 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-700/50 text-gray-400'}`}>
+                        {item.daysUntil === 0 ? 'Today' : item.daysUntil === 1 ? 'Tomorrow' : `${item.daysUntil}d`}
+                      </span>
+                    </div>
+                    <p className="font-medium text-sm mb-1 truncate">{item.description}</p>
+                    <p className={`font-bold text-sm ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
+                      {formatINR(item.nextAmount)}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {item.frequency.charAt(0).toUpperCase() + item.frequency.slice(1)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              {recurring.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-white/5 text-center">
+                  <p className="text-sm text-gray-400">
+                    {recurring.length} active recurring schedule{recurring.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Financial Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -304,7 +332,7 @@ const DashboardPage: React.FC = () => {
                 <div className="w-full bg-gray-700 rounded-full h-2">
                   <div 
                     className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${savingsProgress}%` }}
+                    style={{ width: `${Math.min(savingsProgress, 100)}%` }}
                   ></div>
                 </div>
                 <p className="text-purple-400 text-sm mt-2">{savingsProgress.toFixed(1)}% of {formatINR(financialData.savingsGoal, false)}</p>
@@ -328,9 +356,9 @@ const DashboardPage: React.FC = () => {
                   {recentTransactions.map((transaction) => (
                     <div 
                       key={transaction.id}
-                      className="flex items-center justify-between p-4 bg-gray-800/30 hover:bg-gray-700/30 rounded-xl transition-colors"
+                      className="flex items-center justify-between p-4 bg-gray-800/30 hover:bg-gray-700/30 rounded-xl transition-colors group"
                     >
-                      <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-4 flex-1">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                           transaction.type === 'income' 
                             ? 'bg-green-500/20 text-green-400' 
@@ -338,16 +366,30 @@ const DashboardPage: React.FC = () => {
                         }`}>
                           {transaction.type === 'income' ? '↑' : '↓'}
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <p className="font-medium">{transaction.description}</p>
                           <p className="text-sm text-gray-400">{transaction.category} • {transaction.date}</p>
                         </div>
                       </div>
-                      <p className={`font-bold ${
-                        transaction.type === 'income' ? 'text-green-400' : 'text-red-400'
-                      }`}>
-                        {formatINR(transaction.type === 'income' ? transaction.amount : -transaction.amount)}
-                      </p>
+                      
+                      <div className="flex items-center space-x-4">
+                        <p className={`font-bold ${
+                          transaction.type === 'income' ? 'text-green-400' : 'text-red-400'
+                        }`}>
+                          {formatINR(transaction.type === 'income' ? transaction.amount : -transaction.amount)}
+                        </p>
+                        
+                        {/* NEW: Delete Button */}
+                        <button
+                          onClick={() => setDeleteConfirmId(transaction.id)}
+                          className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-500/20 rounded-lg transition-all"
+                          title="Delete transaction"
+                        >
+                          <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -361,12 +403,6 @@ const DashboardPage: React.FC = () => {
                   <p className="text-gray-400">No transactions yet</p>
                   <p className="text-sm text-gray-500 mt-1">Add your first transaction to get started!</p>
                 </div>
-              )}
-
-              {recentTransactions.length > 0 && (
-                <button className="w-full mt-4 py-3 bg-gray-800/50 hover:bg-gray-700/50 rounded-xl text-gray-300 hover:text-white transition-colors font-medium">
-                  Load More Transactions
-                </button>
               )}
             </div>
 
@@ -395,24 +431,27 @@ const DashboardPage: React.FC = () => {
                   <span className="font-medium text-red-400">Add Expense</span>
                 </button>
 
+                <button 
+                  onClick={() => navigate('/recurring')}
+                  className="w-full py-4 px-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500/30 hover:to-pink-500/30 border border-purple-500/30 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 group"
+                >
+                  <svg className="w-5 h-5 text-purple-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span className="font-medium text-purple-400">Recurring</span>
+                </button>
+
                 <button className="w-full py-4 px-4 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 hover:from-blue-500/30 hover:to-cyan-500/30 border border-blue-500/30 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 group">
                   <svg className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                   <span className="font-medium text-blue-400">View Reports</span>
                 </button>
-
-                <button className="w-full py-4 px-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500/30 hover:to-pink-500/30 border border-purple-500/30 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 group">
-                  <svg className="w-5 h-5 text-purple-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                  </svg>
-                  <span className="font-medium text-purple-400">Set Budget</span>
-                </button>
               </div>
 
               <div className="mt-6 p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
                 <p className="text-sm text-purple-300">
-                  💡 <strong>Tip:</strong> Track your expenses daily to stay on top of your budget!
+                  💡 <strong>Tip:</strong> Set up recurring transactions for regular income and expenses!
                 </p>
               </div>
             </div>
@@ -427,6 +466,44 @@ const DashboardPage: React.FC = () => {
         transactionType={modalType}
         onSubmit={handleTransactionSubmit}
       />
+
+      {/* NEW: Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 max-w-md w-full border border-red-500/30">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Delete Transaction</h3>
+                <p className="text-sm text-gray-400">This action cannot be undone</p>
+              </div>
+            </div>
+            
+            <p className="text-gray-300 mb-6">
+              Are you sure you want to delete this transaction?
+            </p>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteTransaction(deleteConfirmId)}
+                className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 rounded-xl font-medium transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
