@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch } from '../hooks/useAuth';
+import { useAppDispatch, useAppSelector } from '../hooks';
 import { registerUser, clearAuthError } from '../store/slices/authSlice';
-import { useAppSelector } from '../hooks/useAuth';
 import type { RegisterData } from '../types';
 
 const RegisterPage: React.FC = () => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAuth, useProfile } from '../hooks/useAuth';
+import { useAppDispatch, useAuth, useProfile } from '../hooks';
 import { updateProfile, changePassword, logoutUser } from '../store/slices/authSlice';
 import type { ProfileUpdateData, PasswordChangeRequest } from '../types';
 

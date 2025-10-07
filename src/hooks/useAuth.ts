@@ -1,13 +1,6 @@
-import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
-import type { RootState, AppDispatch } from '../store';
+import { useAppDispatch, useAppSelector } from './redux';
 import { updateLastActivity, refreshAuthToken, loadUserFromStorage } from '../store/slices/authSlice';
-
-// Typed hooks - Simple and compatible approach
-export const useAppDispatch = () => useDispatch<AppDispatch>();
-export const useAppSelector = <T>(selector: (state: RootState) => T): T => {
-  return useSelector(selector);
-};
 
 // Custom auth hooks
 export const useAuth = () => {

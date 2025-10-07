@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../hooks/useAuth';
+import { useAppDispatch, useAppSelector } from '../hooks';
 import { requestPasswordReset, clearAuthError, clearPasswordResetState } from '../store/slices/authSlice';
 
 const ForgotPasswordPage: React.FC = () => {
