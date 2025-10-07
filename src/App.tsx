@@ -9,10 +9,12 @@ import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ProfilePage from './pages/ProfilePage';
 import DashboardPage from './pages/dashboard/DashboardPage';
+import RecurringTransactionsPage from './pages/RecurringTransactionsPage';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
 import ApiConnectionStatus from './components/ApiConnectionStatus';
+import ConnectionTester from './components/ConnectionTester';
 
 function App() {
   return (
@@ -28,6 +30,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/test-connection" element={<ConnectionTester />} />
             
             {/* Protected Routes */}
             <Route path="/profile" element={
@@ -40,6 +43,13 @@ function App() {
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            } />
+            
+            {/* Recurring Transactions Route */}
+            <Route path="/recurring" element={
+              <ProtectedRoute>
+                <RecurringTransactionsPage />
               </ProtectedRoute>
             } />
             
