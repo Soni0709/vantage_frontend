@@ -5,7 +5,8 @@ import { useTransactions, useRecurringTransactions } from '../../hooks';
 import { useGetAlertsQuery } from '../../store/api';
 import { formatINR, formatPercentage } from '../../utils';
 import { AddTransactionModal } from '../../components/modals';
-import { BudgetSection, InsightsSection } from '../../components/dashboard';
+import { InsightsSection } from '../../components/dashboard';
+import { UnifiedBudgetDashboard, BudgetCharts } from '../../components/budget';
 import type { TransactionFormData } from '../../components/modals';
 
 const DashboardPage: React.FC = () => {
@@ -272,11 +273,17 @@ const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Budget & Insights Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <BudgetSection />
+          {/* Budget & Insights - Improved Layout */}
+          <div className="space-y-6">
+            {/* Monthly Budget Dashboard - Full Width */}
+            <UnifiedBudgetDashboard />
+            
+            {/* Insights - Full Width */}
             <InsightsSection summary={summary} financialData={financialData} />
           </div>
+
+          {/* Budget Charts */}
+          <BudgetCharts />
 
           {/* Recent Transactions */}
           <div className="bg-white/[0.02] backdrop-blur-xl rounded-2xl p-6 border border-white/5">
