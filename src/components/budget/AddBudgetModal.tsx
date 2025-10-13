@@ -1,22 +1,12 @@
 import React, { useState } from 'react';
 import { useCreateBudgetMutation } from '../../store/api';
 import type { BudgetPeriod, CreateBudgetData } from '../../types';
+import { EXPENSE_CATEGORIES } from '../../constants/categories';
 
 interface AddBudgetModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const CATEGORIES = [
-  'Food',
-  'Transportation',
-  'Entertainment',
-  'Shopping',
-  'Bills',
-  'Healthcare',
-  'Education',
-  'Other'
-];
 
 const PERIODS: { value: BudgetPeriod; label: string }[] = [
   { value: 'weekly', label: 'Weekly' },
@@ -104,16 +94,16 @@ const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose }) => {
           <div>
             <label className="block text-sm font-medium mb-2 text-gray-300">Category</label>
             <select
-              value={formData.category}
-              onChange={(e) => handleChange('category', e.target.value)}
-              className={`w-full bg-gray-800/50 border ${
-                errors.category ? 'border-red-500/50' : 'border-white/10'
-              } rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all`}
+            value={formData.category}
+            onChange={(e) => handleChange('category', e.target.value)}
+            className={`w-full bg-gray-800/50 border ${
+            errors.category ? 'border-red-500/50' : 'border-white/10'
+            } rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all`}
             >
-              <option value="">Select category</option>
-              {CATEGORIES.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
+            <option value="">Select category</option>
+            {EXPENSE_CATEGORIES.map(cat => (
+            <option key={cat} value={cat}>{cat}</option>
+            ))}
             </select>
             {errors.category && (
               <p className="text-red-400 text-xs mt-1.5">{errors.category}</p>

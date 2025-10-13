@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
+import { INCOME_CATEGORIES, EXPENSE_CATEGORIES } from '../../constants/categories';
 
 interface AddTransactionModalProps {
   isOpen: boolean;
@@ -17,34 +18,6 @@ export interface TransactionFormData {
   date: string;
   notes?: string;
 }
-
-const INCOME_CATEGORIES = [
-  'Salary',
-  'Freelance',
-  'Business',
-  'Investment',
-  'Rental Income',
-  'Gift',
-  'Bonus',
-  'Other Income'
-];
-
-const EXPENSE_CATEGORIES = [
-  'Food & Dining',
-  'Groceries',
-  'Transportation',
-  'Shopping',
-  'Entertainment',
-  'Bills & Utilities',
-  'Healthcare',
-  'Education',
-  'Housing',
-  'Insurance',
-  'Travel',
-  'Personal Care',
-  'Gifts & Donations',
-  'Other Expense'
-];
 
 export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   isOpen,
