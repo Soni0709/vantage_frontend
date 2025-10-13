@@ -17,3 +17,19 @@
     @apply bg-gradient-to-br from-blue-50 to-indigo-100;
   }
 }
+
+@layer utilities {
+  /* Shimmer animation for budget progress bar */
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+  }
+}

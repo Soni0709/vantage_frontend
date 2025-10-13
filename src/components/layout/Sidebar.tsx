@@ -6,6 +6,8 @@ import { cn } from '../../utils';
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
 }
 
 const navigation = [
@@ -58,7 +60,7 @@ const navigation = [
   },
 ];
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
   const { currentUser } = useAuth();
 
   return (
@@ -66,7 +68,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       {/* Mobile Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden"
           onClick={onClose}
         />
       )}
@@ -74,28 +76,52 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 left-0 z-50 h-screen w-64 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-r border-white/5 transition-transform duration-300 ease-in-out",
+          "fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-r border-white/5 transition-all duration-300 ease-in-out",
+          isCollapsed ? "w-20" : "w-64",
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
         <div className="flex flex-col h-full">
-          {/* Logo & Close Button */}
+          {/* Logo & Collapse Button */}
           <div className="flex items-center justify-between p-6 border-b border-white/5">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center">
+            {!isCollapsed && (
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center">
+                  <span className="text-lg font-bold">V</span>
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                  Vantage
+                </span>
+              </div>
+            )}
+            
+            {isCollapsed && (
+              <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center mx-auto">
                 <span className="text-lg font-bold">V</span>
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                Vantage
-              </span>
-            </div>
+            )}
+
+            {/* Close button (mobile) / Collapse button (desktop) */}
             <button
-              onClick={onClose}
-              className="lg:hidden p-2 hover:bg-white/5 rounded-lg transition-colors"
+              onClick={() => {
+                if (window.innerWidth < 1024) {
+                  onClose();
+                } else {
+                  onToggleCollapse();
+                }
+              }}
+              className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+              title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              {isCollapsed ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                </svg>
+              )}
             </button>
           </div>
 
@@ -111,13 +137,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                     "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group relative",
                     isActive
                       ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
-                      : "text-gray-400 hover:text-white hover:bg-white/5"
+                      : "text-gray-400 hover:text-white hover:bg-white/5",
+                    isCollapsed && "justify-center"
                   )
                 }
+                title={isCollapsed ? item.name : undefined}
               >
                 {({ isActive }) => (
                   <>
-                    {isActive && (
+                    {isActive && !isCollapsed && (
                       <div className="absolute left-0 w-1 h-8 bg-gradient-to-b from-purple-500 to-blue-500 rounded-r-full" />
                     )}
                     <div className={cn(
@@ -126,11 +154,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                     )}>
                       {item.icon}
                     </div>
-                    <span>{item.name}</span>
-                    {item.badge && (
-                      <span className="ml-auto px-2 py-0.5 bg-purple-500/10 text-purple-400 text-xs font-semibold rounded-md border border-purple-500/20">
-                        {item.badge}
-                      </span>
+                    {!isCollapsed && (
+                      <>
+                        <span>{item.name}</span>
+                        {item.badge && (
+                          <span className="ml-auto px-2 py-0.5 bg-purple-500/10 text-purple-400 text-xs font-semibold rounded-md border border-purple-500/20">
+                            {item.badge}
+                          </span>
+                        )}
+                      </>
                     )}
                   </>
                 )}
@@ -140,24 +172,31 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
           {/* User Profile Section */}
           <div className="p-4 border-t border-white/5">
-            {/* User Info - Links to Profile */}
             <NavLink
               to="/profile"
               onClick={onClose}
-              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-all group"
+              className={cn(
+                "w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-all group",
+                isCollapsed && "justify-center"
+              )}
+              title={isCollapsed ? `${currentUser?.firstName} ${currentUser?.lastName}` : undefined}
             >
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-sm font-semibold">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0">
                 {currentUser?.firstName?.[0]}{currentUser?.lastName?.[0]}
               </div>
-              <div className="flex-1 text-left min-w-0">
-                <p className="text-sm font-medium text-white truncate">
-                  {currentUser?.firstName} {currentUser?.lastName}
-                </p>
-                <p className="text-xs text-gray-400 truncate">{currentUser?.email}</p>
-              </div>
-              <svg className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-              </svg>
+              {!isCollapsed && (
+                <>
+                  <div className="flex-1 text-left min-w-0">
+                    <p className="text-sm font-medium text-white truncate">
+                      {currentUser?.firstName} {currentUser?.lastName}
+                    </p>
+                    <p className="text-xs text-gray-400 truncate">{currentUser?.email}</p>
+                  </div>
+                  <svg className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </>
+              )}
             </NavLink>
           </div>
         </div>

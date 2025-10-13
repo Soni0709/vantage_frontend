@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import ToastContainer from '../ui/Toast';
@@ -9,6 +9,21 @@ interface DashboardLayoutProps {
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // Load collapsed state from localStorage
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    const saved = localStorage.getItem('vantage_sidebar_collapsed');
+    return saved === 'true';
+  });
+
+  // Save collapsed state to localStorage
+  useEffect(() => {
+    localStorage.setItem('vantage_sidebar_collapsed', String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
+
+  const handleToggleCollapse = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
@@ -19,12 +34,25 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       </div>
 
       {/* Sidebar */}
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar 
+        isOpen={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={handleToggleCollapse}
+      />
 
       {/* Main Content */}
-      <div className="lg:pl-64 relative z-10">
+      <div 
+        className={`transition-all duration-300 relative z-10 ${
+          sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'
+        }`}
+      >
         {/* Top Bar */}
-        <TopBar onMenuClick={() => setSidebarOpen(true)} />
+        <TopBar 
+          onMenuClick={() => setSidebarOpen(true)}
+          sidebarCollapsed={sidebarCollapsed}
+          onToggleSidebar={handleToggleCollapse}
+        />
 
         {/* Page Content */}
         <main className="p-4 sm:p-6 lg:p-8">

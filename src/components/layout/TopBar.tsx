@@ -5,9 +5,11 @@ import { useGetAlertsQuery } from '../../store/api';
 
 interface TopBarProps {
   onMenuClick: () => void;
+  sidebarCollapsed?: boolean;
+  onToggleSidebar?: () => void;
 }
 
-const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
+const TopBar: React.FC<TopBarProps> = ({ onMenuClick, sidebarCollapsed, onToggleSidebar }) => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { data: alerts = [] } = useGetAlertsQuery({ isRead: false });
@@ -18,15 +20,35 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
   return (
     <header className="sticky top-0 z-30 border-b border-white/5 backdrop-blur-xl bg-black/20">
       <div className="flex items-center justify-between h-16 px-4 sm:px-6">
-        {/* Left: Mobile Menu Button */}
-        <button
-          onClick={onMenuClick}
-          className="lg:hidden p-2 hover:bg-white/5 rounded-lg transition-colors"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+        {/* Left: Mobile Menu Button & Desktop Collapse Button */}
+        <div className="flex items-center gap-2">
+          {/* Mobile Menu Button */}
+          <button
+            onClick={onMenuClick}
+            className="lg:hidden p-2 hover:bg-white/5 rounded-lg transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+
+          {/* Desktop Collapse Button */}
+          {onToggleSidebar && (
+            <button
+              onClick={onToggleSidebar}
+              className="hidden lg:block p-2 hover:bg-white/5 rounded-lg transition-colors"
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {sidebarCollapsed ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                )}
+              </svg>
+            </button>
+          )}
+        </div>
 
         {/* Center: Search Bar (hidden on mobile) */}
         <div className="hidden sm:flex flex-1 max-w-2xl mx-auto">
