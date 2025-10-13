@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DashboardLayout } from '../components/layout';
+import { DashboardLayout, PageHeader } from '../components/layout';
 
 const AnalyticsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -8,11 +8,11 @@ const AnalyticsPage: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold mb-1">Analytics</h1>
-          <p className="text-gray-400">Deep insights into your financial patterns and trends</p>
-        </div>
+        {/* Header with Back Button */}
+        <PageHeader
+          title="Analytics"
+          description="Deep insights into your financial patterns and trends"
+        />
 
         {/* Coming Soon Card */}
         <div className="bg-white/[0.02] backdrop-blur-xl rounded-2xl p-12 border border-white/5">

@@ -5,7 +5,7 @@ import { useRecurringTransactions } from '../hooks/useTransactions';
 import { RecurringTransactionModal } from '../components/recurring';
 import { formatINR } from '../utils';
 import { useToast } from '../contexts';
-import { DashboardLayout } from '../components/layout';
+import { DashboardLayout, PageHeader } from '../components/layout';
 import type { CreateRecurringTransactionData, RecurringTransaction } from '../types/transaction';
 
 const RecurringTransactionsPage: React.FC = () => {
@@ -106,11 +106,31 @@ const RecurringTransactionsPage: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold mb-1">Recurring Transactions</h1>
-          <p className="text-gray-400">Manage automatic transactions</p>
-        </div>
+        {/* Header with Back Button */}
+        <PageHeader
+          title="Recurring Transactions"
+          description="Manage automatic transactions that repeat on a schedule"
+        >
+          <button
+            onClick={handleProcess}
+            disabled={isProcessing || recurring.length === 0}
+            className="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-medium transition-all flex items-center gap-2"
+          >
+            {isProcessing ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Processing...</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>Process Due</span>
+              </>
+            )}
+          </button>
+        </PageHeader>
 
         {/* Error Banner */}
         {error && (
@@ -124,34 +144,25 @@ const RecurringTransactionsPage: React.FC = () => {
           </div>
         )}
 
+        {/* Stats Overview */}
+        <div className="bg-white/[0.02] backdrop-blur-xl rounded-xl p-4 border border-white/5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-400">Active Recurring</p>
+              <p className="text-2xl font-bold">{recurring.length}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">Due in Next 30 Days</p>
+              <p className="text-2xl font-bold">{upcoming.length}</p>
+            </div>
+          </div>
+        </div>
+
         {/* Process Button */}
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-2xl font-bold">Recurring Schedules</h2>
-            <p className="text-gray-400 text-sm mt-1">
-              {recurring.length} active recurring transaction{recurring.length !== 1 ? 's' : ''}
-            </p>
           </div>
-          
-          <button
-            onClick={handleProcess}
-            disabled={isProcessing || recurring.length === 0}
-            className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-medium transition-all flex items-center space-x-2"
-          >
-            {isProcessing ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Processing...</span>
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <span>Process Due Transactions</span>
-              </>
-            )}
-          </button>
         </div>
 
         {/* Upcoming Recurring Transactions */}
