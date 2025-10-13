@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, useTransactions, useCategories } from '../../hooks';
 import { formatINR } from '../../utils';
+import { useToast } from '../../contexts';
 import type { TransactionFilters } from '../../types/transaction';
 
 const TransactionsPage: React.FC = () => {
@@ -38,15 +39,17 @@ const TransactionsPage: React.FC = () => {
     setFilters({});
   };
 
+  const toast = useToast();
+
   // Handle delete transaction
   const handleDeleteTransaction = async (id: string) => {
     try {
       await deleteTransaction(id);
       setDeleteConfirmId(null);
-      alert('Transaction deleted successfully!');
+      toast.success('Transaction deleted successfully!');
     } catch (err) {
       console.error('Failed to delete transaction:', err);
-      alert(`Failed to delete transaction: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      toast.error(`Failed to delete transaction: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
 

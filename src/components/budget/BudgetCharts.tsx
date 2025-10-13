@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAppSelector } from '../../hooks/redux';
 import { selectMonthlyBudget } from '../../store/slices/monthlyBudgetSlice';
 import { useGetBudgetsQuery } from '../../store/api';
@@ -22,14 +22,16 @@ const BudgetCharts: React.FC = () => {
   const { data: categoryBudgets = [], isLoading } = useGetBudgetsQuery();
   const [activeChart, setActiveChart] = useState<'bar' | 'radial'>('bar');
 
-  // Prepare data for charts
-  const categoryData = categoryBudgets.map(budget => ({
-    name: budget.category,
-    spent: budget.spent,
-    budget: budget.amount,
-    remaining: budget.amount - budget.spent,
-    percentage: budget.percentageUsed,
-  }));
+  // Prepare data for charts - MEMOIZED to prevent infinite loops
+  const categoryData = useMemo(() => {
+    return categoryBudgets.map(budget => ({
+      name: budget.category,
+      spent: budget.spent,
+      budget: budget.amount,
+      remaining: budget.amount - budget.spent,
+      percentage: budget.percentageUsed,
+    }));
+  }, [categoryBudgets]);
 
   // Colors for charts
   const COLORS = [
@@ -45,39 +47,31 @@ const BudgetCharts: React.FC = () => {
     '#a855f7', // violet
   ];
 
-  // Custom tooltip
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-gray-800 border border-white/10 rounded-lg p-3 shadow-xl">
-          <p className="font-semibold text-white mb-2">{payload[0].payload.name}</p>
-          <p className="text-sm text-blue-400">
-            Budget: {formatINR(payload[0].payload.budget, false)}
-          </p>
-          <p className="text-sm text-red-400">
-            Spent: {formatINR(payload[0].payload.spent, false)}
-          </p>
-          <p className="text-sm text-green-400">
-            Remaining: {formatINR(payload[0].payload.remaining, false)}
-          </p>
-          <p className="text-sm text-purple-400 mt-1">
-            {payload[0].payload.percentage.toFixed(1)}% used
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // Monthly overview data for radial chart
-  const monthlyOverviewData = [
-    {
-      name: 'Budget Usage',
-      value: monthlyBudget.usagePercentage,
-      fill: monthlyBudget.usagePercentage >= 100 ? '#ef4444' : 
-            monthlyBudget.usagePercentage >= 80 ? '#f59e0b' : '#10b981',
-    },
-  ];
+  // Custom tooltip - MEMOIZED
+  const CustomTooltip = useMemo(() => {
+    return ({ active, payload }: any) => {
+      if (active && payload && payload.length) {
+        return (
+          <div className="bg-gray-800 border border-white/10 rounded-lg p-3 shadow-xl">
+            <p className="font-semibold text-white mb-2">{payload[0].payload.name}</p>
+            <p className="text-sm text-blue-400">
+              Budget: {formatINR(payload[0].payload.budget, false)}
+            </p>
+            <p className="text-sm text-red-400">
+              Spent: {formatINR(payload[0].payload.spent, false)}
+            </p>
+            <p className="text-sm text-green-400">
+              Remaining: {formatINR(payload[0].payload.remaining, false)}
+            </p>
+            <p className="text-sm text-purple-400 mt-1">
+              {payload[0].payload.percentage.toFixed(1)}% used
+            </p>
+          </div>
+        );
+      }
+      return null;
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -188,7 +182,7 @@ const BudgetCharts: React.FC = () => {
                   tick={{ fill: '#9ca3af', fontSize: 12 }}
                   tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
                 />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={CustomTooltip} />
                 <Legend 
                   wrapperStyle={{ paddingTop: '20px' }}
                   iconType="circle"
@@ -229,7 +223,7 @@ const BudgetCharts: React.FC = () => {
                     />
                   ))}
                 </RadialBar>
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={CustomTooltip} />
               </RadialBarChart>
             </ResponsiveContainer>
           </div>
