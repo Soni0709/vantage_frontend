@@ -80,8 +80,15 @@ class ApiService {
             .map(([field, messages]) => {
               // Handle different error formats
               if (Array.isArray(messages)) {
+                // If field is just a number (like '0'), skip it and show only message
+                if (/^\d+$/.test(field)) {
+                  return messages.join(', ');
+                }
                 return `${field}: ${messages.join(', ')}`;
               } else if (typeof messages === 'string') {
+                if (/^\d+$/.test(field)) {
+                  return messages;
+                }
                 return `${field}: ${messages}`;
               }
               return `${field}: ${JSON.stringify(messages)}`;
@@ -264,7 +271,7 @@ class ApiService {
   // Password reset endpoints
   async requestPasswordReset(data: PasswordResetRequest): Promise<void> {
     try {
-      const response = await this.request<ApiResponse>('/auth/forgot-password', {
+      const response = await this.request<ApiResponse>('/auth/forgot_password', {
         method: 'POST',
         body: JSON.stringify({
           email: data.email
@@ -276,6 +283,26 @@ class ApiService {
       }
     } catch (error) {
       console.error('Password reset request error:', error);
+      throw error;
+    }
+  }
+
+  async resetPassword(token: string, newPassword: string, confirmPassword: string): Promise<void> {
+    try {
+      const response = await this.request<ApiResponse>('/auth/reset_password', {
+        method: 'PUT',
+        body: JSON.stringify({
+          token: token,
+          password: newPassword,
+          password_confirmation: confirmPassword
+        }),
+      });
+
+      if (!response.success) {
+        throw new Error(response.message || 'Password reset failed');
+      }
+    } catch (error) {
+      console.error('Password reset error:', error);
       throw error;
     }
   }
@@ -302,7 +329,7 @@ class ApiService {
 
   async changePassword(data: PasswordChangeRequest): Promise<void> {
     try {
-      const response = await this.request<ApiResponse>('/auth/change-password', {
+      const response = await this.request<ApiResponse>('/auth/change_password', {
         method: 'PUT',
         body: JSON.stringify({
           current_password: data.currentPassword,

@@ -178,6 +178,8 @@ export const transactionsApi = baseApi.injectEndpoints({
       invalidatesTags: [
         { type: 'Transaction', id: 'LIST' },
         { type: 'Summary', id: 'LIST' },
+        { type: 'Budget', id: 'LIST' },
+        { type: 'Alert', id: 'LIST' },
       ],
       // Optimistic update
       async onQueryStarted(data, { dispatch, queryFulfilled }) {
@@ -245,6 +247,8 @@ export const transactionsApi = baseApi.injectEndpoints({
         { type: 'Transaction', id },
         { type: 'Transaction', id: 'LIST' },
         { type: 'Summary', id: 'LIST' },
+        { type: 'Budget', id: 'LIST' },
+        { type: 'Alert', id: 'LIST' },
       ],
       // Optimistic update
       async onQueryStarted({ id, data }, { dispatch, queryFulfilled }) {
@@ -275,6 +279,8 @@ export const transactionsApi = baseApi.injectEndpoints({
         { type: 'Transaction', id },
         { type: 'Transaction', id: 'LIST' },
         { type: 'Summary', id: 'LIST' },
+        { type: 'Budget', id: 'LIST' },
+        { type: 'Alert', id: 'LIST' },
       ],
       // Optimistic update
       async onQueryStarted(id, { dispatch, queryFulfilled }) {
@@ -327,6 +333,8 @@ export const transactionsApi = baseApi.injectEndpoints({
       invalidatesTags: [
         { type: 'Transaction', id: 'LIST' },
         { type: 'Summary', id: 'LIST' },
+        { type: 'Budget', id: 'LIST' },
+        { type: 'Alert', id: 'LIST' },
       ],
     }),
   }),
