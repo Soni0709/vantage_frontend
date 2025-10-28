@@ -27,21 +27,18 @@ const DashboardPage: React.FC = () => {
     transactions,
     summary,
     isLoading,
-    error,
     create,
     delete: deleteTransaction,
   } = useTransactions();
 
   const {
     upcoming,
-    recurring,
-    isLoading: isRecurringLoading,
     process: processRecurring,
     isProcessing,
   } = useRecurringTransactions({ active: true });
 
   // Budget hooks for alerts
-  const { data: alerts = [], isLoading: alertsLoading } = useGetAlertsQuery({ isRead: false });
+  const { data: alerts = [] } = useGetAlertsQuery({ isRead: false });
 
   // Calculate pending recurring transactions
   const pendingRecurring = upcoming.filter(item => item.daysUntil <= 0);
@@ -321,7 +318,7 @@ const DashboardPage: React.FC = () => {
         {/* Budget & Insights */}
         <div className="space-y-6">
           <UnifiedBudgetDashboard />
-          <InsightsSection summary={summary} financialData={financialData} />
+          <InsightsSection summary={summary ?? null} financialData={financialData} />
         </div>
 
         {/* Budget Charts */}
