@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAppDispatch, useAuth, useProfile, useAppSelector } from "../hooks";
+import { useAppDispatch, useAuth, useProfile, useAppSelector } from "../../hooks";
 import {
   updateProfile,
   changePassword,
   logoutUser,
   clearAuthError,
-} from "../store/slices/authSlice";
-import type { ProfileUpdateData, PasswordChangeRequest } from "../types";
+} from "../../store/slices/authSlice";
+import type { ProfileUpdateData, PasswordChangeRequest } from "../../types";
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
