@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks';
-import { useGetAlertsQuery } from '../../store/api';
 
 interface TopBarProps {
   onMenuClick: () => void;
@@ -10,7 +9,12 @@ interface TopBarProps {
 const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const { data: alerts = [] } = useGetAlertsQuery({ isRead: false });
+  // Removed alerts query to prevent infinite loop - will implement later
+  interface Alert {
+    id: string | number;
+    message: string;
+  }
+  const alerts: Alert[] = [];
   const [showNotifications, setShowNotifications] = useState(false);
 
   const unreadCount = alerts.length;
