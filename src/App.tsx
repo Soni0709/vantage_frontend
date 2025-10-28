@@ -5,21 +5,22 @@ import { ToastProvider } from './contexts';
 
 // Pages
 import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import ProfilePage from './pages/ProfilePage';
+import LoginPage from './pages/auth/LoginPage';
+// import RegisterPage from './pages/RegisterPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import ProfilePage from './pages/profiles/ProfilePage';
 import DashboardPage from './pages/dashboard/DashboardPage';
-import RecurringTransactionsPage from './pages/RecurringTransactionsPage';
+import RecurringTransactionsPage from './pages/transactions/RecurringTransactionsPage';
 import TransactionsPage from './pages/transactions/TransactionsPage';
-import BudgetsPage from './pages/BudgetsPage';
-import AnalyticsPage from './pages/AnalyticsPage';
+// import BudgetsPage from './pages/BudgetsPage';
+import AnalyticsPage from './pages/analytics/AnalyticsPage';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
-import ApiConnectionStatus from './components/ApiConnectionStatus';
-import ConnectionTester from './components/ConnectionTester';
+import ApiConnectionStatus from './components/common/ApiConnectionStatus';
+import ConnectionTester from './components/common/ConnectionTester';
+import BudgetsPage from './pages/budgets/BudgetsPage';
 
 function App() {
   return (
@@ -34,11 +35,11 @@ function App() {
               {/* Public Routes */}
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
+              {/* <Route path="/register" element={<RegisterPage />} /> */}
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/test-connection" element={<ConnectionTester />} />
-              
+              {/* <Route path="/test-connection" element={<ConnectionTester />} /> */}
               {/* Protected Routes */}
               <Route path="/profile" element={
                 <ProtectedRoute>
