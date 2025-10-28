@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks';
-import { useTransactions, useRecurringTransactions } from '../../hooks';
+import { useTransactions, useRecurringTransactions, useSavingsGoals } from '../../hooks';
 import { useGetAlertsQuery } from '../../store/api';
 import { formatINR, formatPercentage } from '../../utils';
 import { useToast } from '../../contexts';
@@ -39,6 +39,9 @@ const DashboardPage: React.FC = () => {
 
   // Budget hooks for alerts
   const { data: alerts = [] } = useGetAlertsQuery({ isRead: false });
+  
+  // Savings goals hooks
+  const { summary: savingsSummary } = useSavingsGoals({ status: 'active' });
 
   // Calculate pending recurring transactions
   const pendingRecurring = upcoming.filter(item => item.daysUntil <= 0);
@@ -60,8 +63,8 @@ const DashboardPage: React.FC = () => {
     balance: summary?.balance || 0,
     income: summary?.totalIncome || 0,
     expenses: summary?.totalExpenses || 0,
-    savingsGoal: 5000000,
-    currentSavings: summary?.balance || 0
+    savingsGoal: savingsSummary?.total_target || 5000000, // Use real target or default
+    currentSavings: savingsSummary?.total_saved || 0 // Use real saved amount
   };
 
   const percentageChanges = {
