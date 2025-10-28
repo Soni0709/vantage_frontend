@@ -2,6 +2,7 @@
 export * from './auth';
 export * from './transaction';
 export * from './budget';
+export * from './savingsGoal';
 
 // Re-export key types explicitly to ensure they're available
 export type {
@@ -46,3 +47,10 @@ export type {
   BackendBudgetSummary,
   BackendCategoryBudgetSummary
 } from './budget';
+
+export type {
+  SavingsGoal,
+  SavingsGoalFormData,
+  SavingsGoalSummary,
+  AddAmountData
+} from './savingsGoal';
