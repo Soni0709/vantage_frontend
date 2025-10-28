@@ -111,7 +111,7 @@ const RecurringTransactionModal: React.FC<RecurringTransactionModalProps> = ({
     }
   }, [editData]);
 
-  const handleChange = (field: keyof CreateRecurringTransactionData, value: any) => {
+  const handleChange = (field: keyof CreateRecurringTransactionData, value: unknown) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -149,7 +149,7 @@ const RecurringTransactionModal: React.FC<RecurringTransactionModalProps> = ({
     }));
   };
 
-  const handleConfigChange = (field: keyof RecurringConfig, value: any) => {
+  const handleConfigChange = (field: keyof RecurringConfig, value: unknown) => {
     setFormData((prev) => ({
       ...prev,
       config: {
