@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DashboardLayout, PageHeader } from '../components/layout';
+import { DashboardLayout, PageHeader } from '../../components/layout';
 
 const BudgetsPage: React.FC = () => {
   const navigate = useNavigate();

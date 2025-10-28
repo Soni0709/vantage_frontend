@@ -136,10 +136,10 @@ const RecurringTransactionModal: React.FC<RecurringTransactionModalProps> = ({
         config.dayOfMonth = new Date(formData.startDate).getDate();
         break;
       case 'yearly':
-        const startDate = new Date(formData.startDate);
+        { const startDate = new Date(formData.startDate);
         config.dayOfMonth = startDate.getDate();
         config.monthOfYear = startDate.getMonth() + 1;
-        break;
+        break; }
     }
 
     setFormData((prev) => ({
