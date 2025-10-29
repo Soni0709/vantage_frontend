@@ -37,10 +37,10 @@ const LandingPage: React.FC = () => {
   ];
 
   const stats = [
-    { number: "50K+", label: "Active Users", delay: "0ms" },
-    { number: "$2.5M", label: "Money Tracked", delay: "200ms" },
-    { number: "98%", label: "User Satisfaction", delay: "400ms" },
-    { number: "24/7", label: "Support", delay: "600ms" }
+    { number: "100%", label: "Free Forever", delay: "0ms" },
+    { number: "₹0", label: "Hidden Fees", delay: "200ms" },
+    { number: "256-bit", label: "Encryption", delay: "400ms" },
+    { number: "24/7", label: "Access", delay: "600ms" }
   ];
 
   const FloatingCard = ({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) => (
