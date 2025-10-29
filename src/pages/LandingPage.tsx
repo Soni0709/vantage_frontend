@@ -17,21 +17,21 @@ const LandingPage: React.FC = () => {
 
   const features = [
     {
-      title: "Smart Tracking",
-      description: "AI-powered expense categorization that learns your spending habits",
-      icon: "🧠",
+      title: "Smart Budget Tracking",
+      description: "Set category-wise budgets and get real-time alerts when you're approaching limits",
+      icon: "💰",
       color: "from-purple-500 to-pink-500"
     },
     {
-      title: "Real-time Insights",
-      description: "Get instant analytics and personalized financial recommendations",
-      icon: "⚡",
+      title: "Savings Goals",
+      description: "Create multiple savings goals, track progress, and achieve your financial dreams",
+      icon: "🎯",
       color: "from-blue-500 to-cyan-500"
     },
     {
-      title: "Goal Achievement",
-      description: "Set and track financial goals with intelligent milestone tracking",
-      icon: "🎯",
+      title: "Transaction Management",
+      description: "Track income and expenses with automatic recurring transaction handling",
+      icon: "📊",
       color: "from-green-500 to-emerald-500"
     }
   ];
@@ -90,18 +90,18 @@ const LandingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto text-center">
           <FloatingCard delay={200}>
             <h1 className="text-6xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent leading-tight">
-              Master Your
+              Take Control of
               <br />
               <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                Financial Future
+                Your Money
               </span>
             </h1>
           </FloatingCard>
           
           <FloatingCard delay={400}>
             <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-              Transform how you manage money with real-time tracking, smart budgeting, 
-               insights and personalized recommendations that adapt to your lifestyle.
+              Simple, powerful personal finance tracker built for India. Track expenses, 
+              set budgets, achieve savings goals, and get real-time insights—all in one place.
             </p>
           </FloatingCard>
 
@@ -113,17 +113,18 @@ const LandingPage: React.FC = () => {
                 className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                 onClick={() => navigate('/login')}
               >
-                Start Free Trial
+                Get Started Free
               </Button>
               <Button 
                 variant="outline" 
                 size="lg"
                 className="border-white/30 text-white hover:bg-white/10 px-8 py-4 text-lg font-semibold group"
+                onClick={() => navigate('/login')}
               >
                 <span className="flex items-center">
-                  Watch Demo
+                  Sign In
                   <svg className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </span>
               </Button>
@@ -155,10 +156,10 @@ const LandingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              Why Choose Vantage?
+              Everything You Need to Manage Money
             </h2>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              Experience the future of financial management with cutting-edge features designed for modern life
+              All essential features in one simple app—no premium plans, no hidden costs
             </p>
           </div>
 
@@ -178,21 +179,21 @@ const LandingPage: React.FC = () => {
                   {features[activeFeature].description}
                 </p>
                 
-                {/* Animated Progress Bars */}
+                {/* Feature Metrics */}
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-400">Accuracy</span>
-                    <span className="text-sm text-white font-semibold">96%</span>
+                    <span className="text-sm text-gray-400">Easy to Use</span>
+                    <span className="text-sm text-white font-semibold">Simple</span>
                   </div>
                   <div className="w-full bg-gray-700 rounded-full h-2">
-                    <div className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full w-[96%] transition-all duration-1000"></div>
+                    <div className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full w-[98%] transition-all duration-1000"></div>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-400">Speed</span>
-                    <span className="text-sm text-white font-semibold">Lightning Fast</span>
+                    <span className="text-sm text-gray-400">Completely Free</span>
+                    <span className="text-sm text-white font-semibold">₹0 Cost</span>
                   </div>
                   <div className="w-full bg-gray-700 rounded-full h-2">
-                    <div className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full w-[94%] transition-all duration-1000"></div>
+                    <div className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full w-[100%] transition-all duration-1000"></div>
                   </div>
                 </div>
               </div>
@@ -231,10 +232,10 @@ const LandingPage: React.FC = () => {
         <div className="max-w-4xl mx-auto text-center">
           <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 backdrop-blur-xl rounded-3xl p-12 border border-white/10 shadow-2xl">
             <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              Ready to Transform Your Finances?
+              Start Managing Your Finances Today
             </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Join thousands of users who have already taken control of their financial future with Vantage.
+              No credit card required. No hidden fees. Get instant access to all features, completely free.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
@@ -243,17 +244,18 @@ const LandingPage: React.FC = () => {
                 className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                 onClick={() => navigate('/login')}
               >
-                Get Started for Free
+                Get Started Now
               </Button>
               <Button 
                 variant="outline" 
                 size="lg"
                 className="border-white/30 text-white hover:bg-white/10 px-8 py-4 text-lg font-semibold"
+                onClick={() => navigate('/login')}
               >
-                Schedule Demo
+                Sign In
               </Button>
             </div>
-            <p className="text-gray-400 text-sm mt-4">No credit card required • 14-day free trial</p>
+            <p className="text-gray-400 text-sm mt-4">No credit card required • 100% free forever</p>
           </div>
         </div>
       </section>
