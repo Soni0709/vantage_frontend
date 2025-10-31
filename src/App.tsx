@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './store';
-import { ToastProvider } from './contexts';
+import { ToastProvider, ThemeProvider } from './contexts';
 
 // Pages
 import LandingPage from './pages/LandingPage';
@@ -24,10 +24,11 @@ import ConnectionTester from './components/common/ConnectionTester';
 function App() {
   return (
     <Provider store={store}>
-      <ToastProvider>
-        <Router>
-          <div className="App">
-            {/* API Connection Status */}
+      <ThemeProvider>
+        <ToastProvider>
+          <Router>
+            <div className="App">
+              {/* API Connection Status */}
             <ApiConnectionStatus />
             
             <Routes>
@@ -93,6 +94,7 @@ function App() {
           </div>
         </Router>
       </ToastProvider>
+      </ThemeProvider>
     </Provider>
   );
 }
