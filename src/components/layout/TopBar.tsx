@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks';
 import { useGetAlertsQuery, useMarkAlertReadMutation, useGetSavingsGoalsSummaryQuery } from '../../store/api';
+import { ThemeToggle } from '../ui';
 import type { BudgetAlert } from '../../types';
 
 interface TopBarProps {
@@ -229,6 +230,9 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Theme Toggle */}
+          <ThemeToggle />
+          
           {/* Notifications */}
           <div className="relative">
             <button
