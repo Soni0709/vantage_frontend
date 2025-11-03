@@ -1,35 +1,45 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-  html {
-    @apply antialiased;
+/* Base styles */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: linear-gradient(to bottom right, rgb(15 23 42), rgb(15 23 42), rgb(2 6 23));
+  color: white;
+  min-height: 100vh;
+}
+
+/* Light theme body override */
+html.light body {
+  background: linear-gradient(to bottom right, rgb(249 250 251), rgb(255 255 255), rgb(243 244 246));
+  color: rgb(17 24 39);
+}
+
+/* Custom animations */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
   }
-  
-  body {
-    @apply bg-gray-50 text-gray-900;
+  100% {
+    transform: translateX(100%);
   }
 }
 
-@layer components {
-  .gradient-bg {
-    @apply bg-gradient-to-br from-blue-50 to-indigo-100;
-  }
+.animate-shimmer {
+  animation: shimmer 2s infinite;
 }
 
-@layer utilities {
-  /* Shimmer animation for budget progress bar */
-  @keyframes shimmer {
-    0% {
-      transform: translateX(-100%);
-    }
-    100% {
-      transform: translateX(100%);
-    }
-  }
-  
-  .animate-shimmer {
-    animation: shimmer 2s infinite;
-  }
+/* Smooth theme transitions */
+* {
+  transition-property: background-color, border-color, color;
+  transition-duration: 200ms;
+  transition-timing-function: ease-in-out;
+}
+
+/* Disable transitions on theme toggle to prevent flash */
+html.changing-theme * {
+  transition: none !important;
 }

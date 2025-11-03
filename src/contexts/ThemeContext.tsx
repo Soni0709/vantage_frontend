@@ -5,49 +5,51 @@ type Theme = 'light' | 'dark';
 interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
-  setTheme: (theme: Theme) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Get initial theme from localStorage or system preference
-  const getInitialTheme = (): Theme => {
+  // Get theme from localStorage or default to dark
+  const [theme, setTheme] = useState<Theme>(() => {
     const stored = localStorage.getItem('vantage_theme') as Theme;
-    if (stored) return stored;
-    
-    // Check system preference
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
-    return 'dark'; // Default to dark since your app is dark-themed
-  };
+    return stored || 'dark';
+  });
 
-  const [theme, setThemeState] = useState<Theme>(getInitialTheme);
-
-  // Apply theme to document
   useEffect(() => {
-    const root = window.document.documentElement;
+    const root = document.documentElement;
+    
+    // Add changing-theme class to disable transitions
+    root.classList.add('changing-theme');
+    
+    // Remove both theme classes
     root.classList.remove('light', 'dark');
+    
+    // Add current theme class
     root.classList.add(theme);
+    
+    // Save to localStorage
     localStorage.setItem('vantage_theme', theme);
+    
+    // Remove changing-theme class after a brief delay
+    setTimeout(() => {
+      root.classList.remove('changing-theme');
+    }, 50);
   }, [theme]);
 
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
-  };
-
   const toggleTheme = () => {
-    setThemeState(prev => prev === 'light' ? 'dark' : 'light');
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
 };
 
+// Custom hook to use theme context
+// eslint-disable-next-line react-refresh/only-export-components
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) {
