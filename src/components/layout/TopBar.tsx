@@ -33,6 +33,10 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
   const [markAsRead] = useMarkAlertReadMutation();
   
   const [showNotifications, setShowNotifications] = useState(false);
+  const [readSavingsGoals, setReadSavingsGoals] = useState<Set<string>>(() => {
+    const stored = localStorage.getItem('vantage_read_savings_notifications');
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  });
 
   // Convert budget alerts to notifications
   const budgetNotifications: Notification[] = useMemo(() => {
@@ -57,7 +61,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
     
     savingsSummary.goals.forEach((goal) => {
       // Goal reached notification
-      if (goal.is_reached && !goal.isRead) {
+      if (goal.is_reached && !readSavingsGoals.has(`savings-reached-${goal.id}`)) {
         notifications.push({
           id: `savings-reached-${goal.id}`,
           type: 'savings_goal',
@@ -70,7 +74,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
       }
       
       // Overdue notification
-      if (goal.is_overdue && !goal.is_reached) {
+      if (goal.is_overdue && !goal.is_reached && !readSavingsGoals.has(`savings-overdue-${goal.id}`)) {
         notifications.push({
           id: `savings-overdue-${goal.id}`,
           type: 'savings_goal',
@@ -84,7 +88,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
       
       // Near completion notification (90%+)
       const progress = Number(goal.progress_percentage || 0);
-      if (progress >= 90 && progress < 100 && !goal.is_reached) {
+      if (progress >= 90 && progress < 100 && !goal.is_reached && !readSavingsGoals.has(`savings-near-${goal.id}`)) {
         notifications.push({
           id: `savings-near-${goal.id}`,
           type: 'savings_goal',
@@ -98,7 +102,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
     });
     
     return notifications;
-  }, [savingsSummary]);
+  }, [savingsSummary, readSavingsGoals]);
 
   // Combine all notifications and sort by timestamp
   const allNotifications = useMemo(() => {
@@ -115,11 +119,20 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
       } catch (error) {
         console.error('Failed to mark alert as read:', error);
       }
+    } else if (notification.type === 'savings_goal') {
+      // Mark savings goal notification as read locally
+      const newReadSet = new Set(readSavingsGoals);
+      newReadSet.add(notification.id);
+      setReadSavingsGoals(newReadSet);
+      localStorage.setItem('vantage_read_savings_notifications', JSON.stringify(Array.from(newReadSet)));
+      console.log('Marked savings goal notification as read:', notification.id);
     }
-    // Savings goal notifications are frontend-only, so just close the dropdown
   };
 
   const handleNotificationClick = (notification: Notification) => {
+    // Mark as read when clicking
+    handleMarkAsRead(notification);
+    
     if (notification.actionUrl) {
       navigate(notification.actionUrl);
       setShowNotifications(false);
@@ -308,6 +321,17 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
                                       className="text-xs text-purple-400 hover:text-purple-300 font-medium"
                                     >
                                       Mark as read
+                                    </button>
+                                  )}
+                                  {notification.type === 'savings_goal' && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleMarkAsRead(notification);
+                                      }}
+                                      className="text-xs text-purple-400 hover:text-purple-300 font-medium"
+                                    >
+                                      Dismiss
                                     </button>
                                   )}
                                   {notification.actionLabel && (
