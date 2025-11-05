@@ -2,9 +2,7 @@ import { baseApi } from './baseApi';
 import type { 
   SavingsGoal, 
   SavingsGoalFormData, 
-  SavingsGoalSummary, 
-  AddAmountData 
-} from '../../types';
+  SavingsGoalSummary} from '../../types';
 
 interface ApiResponse<T> {
   success: boolean;
