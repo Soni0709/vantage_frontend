@@ -50,8 +50,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         {/* Top Bar */}
         <TopBar 
           onMenuClick={() => setSidebarOpen(true)}
-          sidebarCollapsed={sidebarCollapsed}
-          onToggleSidebar={handleToggleCollapse}
         />
 
         {/* Page Content */}
