@@ -1,4 +1,7 @@
+// ✅ Import the base API configuration (with token handling, re-auth logic)
 import { baseApi } from './baseApi';
+
+// ✅ Import type definitions for strong typing throughout the file
 import type {
   Budget,
   CreateBudgetData,
@@ -12,12 +15,18 @@ import type {
   BackendBudgetSummary,
 } from '../../types';
 
-// Transform functions
+
+// --------------------
+// TRANSFORM FUNCTIONS
+// --------------------
+// These help convert raw backend data (snake_case, decimal strings)
+// into clean frontend types (camelCase, numbers, etc.)
+
 const transformBudget = (backend: BackendBudget): Budget => ({
   id: backend.id,
-  userId: backend.user_id,
+  userId: backend.user_id,                  // Convert backend snake_case → camelCase
   category: backend.category,
-  amount: parseFloat(backend.amount.toString()),
+  amount: parseFloat(backend.amount.toString()), // Convert string/decimal → number
   period: backend.period,
   spent: parseFloat(backend.spent.toString()),
   remaining: parseFloat(backend.remaining.toString()),
@@ -45,6 +54,7 @@ const transformSummary = (backend: BackendBudgetSummary): BudgetSummary => ({
   totalSpent: parseFloat(backend.total_spent.toString()),
   totalRemaining: parseFloat(backend.total_remaining.toString()),
   overallPercentage: parseFloat(backend.overall_percentage.toString()),
+  // Map over each category in the backend response
   categoryBreakdown: backend.category_breakdown.map(cat => ({
     category: cat.category,
     budgeted: parseFloat(cat.budgeted.toString()),
@@ -54,28 +64,39 @@ const transformSummary = (backend: BackendBudgetSummary): BudgetSummary => ({
   })),
 });
 
+
+// --------------------
+// BUDGETS API ENDPOINTS
+// --------------------
+// Inject all budget-related endpoints into baseApi (inherits baseQueryWithReauth)
 export const budgetsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    // Get all budgets
+
+    // 🧩 GET: all budgets (with optional filters)
     getBudgets: builder.query<Budget[], BudgetFilters | void>({
+      // Build query string based on filters (category, period, isActive)
       query: (filters) => {
         const params = new URLSearchParams();
         if (filters?.category) params.append('category', filters.category);
         if (filters?.period) params.append('period', filters.period);
-        if (filters?.isActive !== undefined) params.append('is_active', filters.isActive.toString());
+        if (filters?.isActive !== undefined)
+          params.append('is_active', filters.isActive.toString());
         
         const queryString = params.toString();
+        // Return final URL depending on whether filters exist
         return queryString ? `/budgets?${queryString}` : '/budgets';
       },
+      // Convert backend budgets → frontend Budget[]
       transformResponse: (response: { success: boolean; data: { budgets: BackendBudget[] } }) =>
         response.data.budgets.map(transformBudget),
+      // Cache tagging: each budget + the list tag
       providesTags: (result) =>
         result
           ? [...result.map(({ id }) => ({ type: 'Budget' as const, id })), { type: 'Budget', id: 'LIST' }]
           : [{ type: 'Budget', id: 'LIST' }],
     }),
 
-    // Get single budget
+    // 🧩 GET: single budget by ID
     getBudget: builder.query<Budget, string>({
       query: (id) => `/budgets/${id}`,
       transformResponse: (response: { success: boolean; data: { budget: BackendBudget } }) =>
@@ -83,7 +104,7 @@ export const budgetsApi = baseApi.injectEndpoints({
       providesTags: (result, error, id) => [{ type: 'Budget', id }],
     }),
 
-    // Create budget
+    // 🧩 POST: create a new budget
     createBudget: builder.mutation<Budget, CreateBudgetData>({
       query: (data) => ({
         url: '/budgets',
@@ -93,12 +114,13 @@ export const budgetsApi = baseApi.injectEndpoints({
             category: data.category,
             amount: data.amount,
             period: data.period,
-            start_date: data.startDate,
+            start_date: data.startDate, // Backend expects snake_case
           },
         },
       }),
       transformResponse: (response: { success: boolean; data: { budget: BackendBudget } }) =>
         transformBudget(response.data.budget),
+      // Invalidate relevant caches so UI refetches fresh data
       invalidatesTags: [
         { type: 'Budget', id: 'LIST' },
         { type: 'Summary' },
@@ -106,7 +128,7 @@ export const budgetsApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // Update budget
+    // 🧩 PUT: update existing budget by ID
     updateBudget: builder.mutation<Budget, { id: string; data: UpdateBudgetData }>({
       query: ({ id, data }) => ({
         url: `/budgets/${id}`,
@@ -123,14 +145,14 @@ export const budgetsApi = baseApi.injectEndpoints({
       transformResponse: (response: { success: boolean; data: { budget: BackendBudget } }) =>
         transformBudget(response.data.budget),
       invalidatesTags: (result, error, { id }) => [
-        { type: 'Budget', id },
-        { type: 'Budget', id: 'LIST' },
+        { type: 'Budget', id },         // refresh updated budget
+        { type: 'Budget', id: 'LIST' }, // refresh list view
         { type: 'Summary' },
         { type: 'Alert', id: 'LIST' },
       ],
     }),
 
-    // Delete budget
+    // 🧩 DELETE: remove budget by ID
     deleteBudget: builder.mutation<void, string>({
       query: (id) => ({
         url: `/budgets/${id}`,
@@ -143,7 +165,7 @@ export const budgetsApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // Get budget summary
+    // 🧩 GET: overall summary across all budgets
     getBudgetSummary: builder.query<BudgetSummary, void>({
       query: () => '/budgets/summary',
       transformResponse: (response: { success: boolean; data: BackendBudgetSummary }) =>
@@ -151,11 +173,12 @@ export const budgetsApi = baseApi.injectEndpoints({
       providesTags: [{ type: 'Summary' }],
     }),
 
-    // Get alerts
+    // 🧩 GET: budget alerts (warnings, overuse, etc.)
     getAlerts: builder.query<BudgetAlert[], AlertFilters | void>({
       query: (filters) => {
         const params = new URLSearchParams();
-        if (filters?.isRead !== undefined) params.append('is_read', filters.isRead.toString());
+        if (filters?.isRead !== undefined)
+          params.append('is_read', filters.isRead.toString());
         if (filters?.severity) params.append('severity', filters.severity);
         
         const queryString = params.toString();
@@ -169,7 +192,7 @@ export const budgetsApi = baseApi.injectEndpoints({
           : [{ type: 'Alert', id: 'LIST' }],
     }),
 
-    // Refresh budgets (recalculate)
+    // 🧩 POST: recalculate budgets on backend (useful if data changed)
     refreshBudgets: builder.mutation<void, void>({
       query: () => ({
         url: '/budgets/refresh',
@@ -182,7 +205,7 @@ export const budgetsApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // Mark alert as read
+    // 🧩 PATCH: mark an alert as read
     markAlertRead: builder.mutation<void, { budgetId: string; alertId: string }>({
       query: ({ budgetId, alertId }) => ({
         url: `/budgets/${budgetId}/alerts/${alertId}/read`,
@@ -194,7 +217,7 @@ export const budgetsApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // Acknowledge alert
+    // 🧩 PATCH: acknowledge an alert (e.g., user accepted it)
     acknowledgeAlert: builder.mutation<void, { budgetId: string; alertId: string }>({
       query: ({ budgetId, alertId }) => ({
         url: `/budgets/${budgetId}/alerts/${alertId}/acknowledge`,
@@ -208,15 +231,21 @@ export const budgetsApi = baseApi.injectEndpoints({
   }),
 });
 
+
+// --------------------
+// AUTO-GENERATED HOOKS
+// --------------------
+// RTK Query automatically generates React hooks for each endpoint above.
+// These hooks handle data fetching, caching, re-fetching, and mutations.
 export const {
-  useGetBudgetsQuery,
-  useGetBudgetQuery,
-  useCreateBudgetMutation,
-  useUpdateBudgetMutation,
-  useDeleteBudgetMutation,
-  useGetBudgetSummaryQuery,
-  useGetAlertsQuery,
-  useRefreshBudgetsMutation,
-  useMarkAlertReadMutation,
-  useAcknowledgeAlertMutation,
+  useGetBudgetsQuery,           // GET /budgets
+  useGetBudgetQuery,            // GET /budgets/:id
+  useCreateBudgetMutation,      // POST /budgets
+  useUpdateBudgetMutation,      // PUT /budgets/:id
+  useDeleteBudgetMutation,      // DELETE /budgets/:id
+  useGetBudgetSummaryQuery,     // GET /budgets/summary
+  useGetAlertsQuery,            // GET /budgets/alerts
+  useRefreshBudgetsMutation,    // POST /budgets/refresh
+  useMarkAlertReadMutation,     // PATCH /budgets/:id/alerts/:alertId/read
+  useAcknowledgeAlertMutation,  // PATCH /budgets/:id/alerts/:alertId/acknowledge
 } = budgetsApi;
