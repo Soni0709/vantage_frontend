@@ -211,6 +211,7 @@ export const loadUserFromStorage = createAsyncThunk(
         refreshToken,
         expiresIn: 3600000, // Mock expiry
       };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       localStorage.clear();
       return rejectWithValue('Failed to load stored authentication');
