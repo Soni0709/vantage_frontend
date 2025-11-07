@@ -45,7 +45,7 @@ export const savingsGoalsApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: ApiResponse<{ savings_goal: SavingsGoal }>) => 
         response.data.savings_goal,
-      providesTags: (result, error, id) => [{ type: 'SavingsGoal', id }],
+      providesTags: (_result, _error, id) => [{ type: 'SavingsGoal', id }],
     }),
 
     // POST /api/v1/savings_goals
@@ -69,7 +69,7 @@ export const savingsGoalsApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: ApiResponse<{ savings_goal: SavingsGoal }>) => 
         response.data.savings_goal,
-      invalidatesTags: (result, error, { id }) => [
+      invalidatesTags: (_result, _error, { id }) => [
         { type: 'SavingsGoal', id },
         { type: 'SavingsGoal', id: 'LIST' },
         { type: 'SavingsGoal', id: 'SUMMARY' },
@@ -82,7 +82,7 @@ export const savingsGoalsApi = baseApi.injectEndpoints({
         url: `/savings_goals/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: (result, error, id) => [
+      invalidatesTags: (_result, _error, id) => [
         { type: 'SavingsGoal', id },
         { type: 'SavingsGoal', id: 'LIST' },
         { type: 'SavingsGoal', id: 'SUMMARY' },
@@ -98,7 +98,7 @@ export const savingsGoalsApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: ApiResponse<{ savings_goal: SavingsGoal }>) => 
         response.data.savings_goal,
-      invalidatesTags: (result, error, { id }) => [
+      invalidatesTags: (_result, _error, { id }) => [
         { type: 'SavingsGoal', id },
         { type: 'SavingsGoal', id: 'LIST' },
         { type: 'SavingsGoal', id: 'SUMMARY' },

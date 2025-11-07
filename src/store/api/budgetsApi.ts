@@ -105,7 +105,7 @@ export const budgetsApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: { success: boolean; data: { budget: BackendBudget } }) =>
         transformBudget(response.data.budget),
-      providesTags: (result, error, id) => [{ type: 'Budget', id }],
+      providesTags: (_result, _error, id) => [{ type: 'Budget', id }],
     }),
 
     // 🧩 POST: create a new budget
@@ -148,7 +148,7 @@ export const budgetsApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: { success: boolean; data: { budget: BackendBudget } }) =>
         transformBudget(response.data.budget),
-      invalidatesTags: (result, error, { id }) => [
+      invalidatesTags: (_result, _error, { id }) => [
         { type: 'Budget', id },         // refresh updated budget
         { type: 'Budget', id: 'LIST' }, // refresh list view
         { type: 'Summary' },
@@ -162,7 +162,7 @@ export const budgetsApi = baseApi.injectEndpoints({
         url: `/budgets/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: (result, error, id) => [
+      invalidatesTags: (_result, _error, id) => [
         { type: 'Budget', id },
         { type: 'Budget', id: 'LIST' },
         { type: 'Summary' },
@@ -219,7 +219,7 @@ export const budgetsApi = baseApi.injectEndpoints({
     url: `/budgets/${budgetId}/alerts/${alertId}/read`,
     method: 'PATCH',
     }),
-      invalidatesTags: (result, error, { alertId }) => [
+      invalidatesTags: (_result, _error, { alertId }) => [
         { type: 'Alert', id: alertId },
         { type: 'Alert', id: 'LIST' },
       ],
@@ -231,7 +231,7 @@ export const budgetsApi = baseApi.injectEndpoints({
         url: `/budgets/${budgetId}/alerts/${alertId}/acknowledge`,
         method: 'PATCH',
       }),
-      invalidatesTags: (result, error, { alertId }) => [
+      invalidatesTags: (_result, _error, { alertId }) => [
         { type: 'Alert', id: alertId },
         { type: 'Alert', id: 'LIST' },
       ],

@@ -17,7 +17,8 @@ const UnifiedBudgetDashboard: React.FC = () => {
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [editValue, setEditValue] = useState(monthlyBudget.amount.toString());
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_editingBudget, _setEditingBudget] = useState<Budget | null>(null);
 
   const handleSaveBudget = () => {
     const newAmount = parseFloat(editValue);
@@ -33,7 +34,7 @@ const UnifiedBudgetDashboard: React.FC = () => {
   };
 
   const handleEditBudget = (budget: Budget) => {
-    setEditingBudget(budget);
+    _setEditingBudget(budget);
     setIsAddModalOpen(true);
   };
 
@@ -244,7 +245,7 @@ const UnifiedBudgetDashboard: React.FC = () => {
             
             <button
               onClick={() => {
-                setEditingBudget(null);
+                _setEditingBudget(null);
                 setIsAddModalOpen(true);
               }}
               className="px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded-xl transition-all text-blue-400 font-medium text-sm flex items-center gap-2"
@@ -266,7 +267,7 @@ const UnifiedBudgetDashboard: React.FC = () => {
         isOpen={isAddModalOpen}
         onClose={() => {
           setIsAddModalOpen(false);
-          setEditingBudget(null);
+          _setEditingBudget(null);
         }}
       />
     </div>
