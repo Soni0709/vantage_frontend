@@ -88,7 +88,9 @@ export const transactionsApi = baseApi.injectEndpoints({
     getTransactions: builder.query<Transaction[], TransactionFilters | void>({
       query: (filters) => {
         const queryString = buildQueryString(filters || undefined);
-        return queryString ? `/transactions?${queryString}` : '/transactions';
+        return {
+          url: queryString ? `/transactions?${queryString}` : '/transactions'
+        };
       },
       transformResponse: (response: ApiResponse<{ transactions: BackendTransaction[] }>) => {
         if (!response.success || !response.data) {
@@ -112,7 +114,9 @@ export const transactionsApi = baseApi.injectEndpoints({
     >({
       query: ({ filters, pagination }) => {
         const queryString = buildQueryString(filters, pagination);
-        return `/transactions?${queryString}`;
+        return {
+          url: `/transactions?${queryString}`
+        };
       },
       transformResponse: (response: ApiResponse<{
         transactions: BackendTransaction[];
@@ -142,7 +146,9 @@ export const transactionsApi = baseApi.injectEndpoints({
 
     // Get single transaction
     getTransaction: builder.query<Transaction, string>({
-      query: (id) => `/transactions/${id}`,
+      query: (id) => ({
+        url: `/transactions/${id}`
+      }),
       transformResponse: (response: ApiResponse<{ transaction: BackendTransaction }>) => {
         if (!response.success || !response.data) {
           throw new Error(response.message || 'Failed to fetch transaction');
@@ -307,11 +313,13 @@ export const transactionsApi = baseApi.injectEndpoints({
       { startDate?: string; endDate?: string } | void
     >({
       query: (params) => {
-        if (!params) return '/transactions/summary';
+        if (!params) return { url: '/transactions/summary' };
         const queryParams = new URLSearchParams();
         if (params.startDate) queryParams.append('start_date', params.startDate);
         if (params.endDate) queryParams.append('end_date', params.endDate);
-        return `/transactions/summary?${queryParams.toString()}`;
+        return {
+          url: `/transactions/summary?${queryParams.toString()}`
+        };
       },
       transformResponse: (response: ApiResponse<BackendTransactionSummary>) => {
         if (!response.success) {
@@ -320,7 +328,7 @@ export const transactionsApi = baseApi.injectEndpoints({
         const summary = transformSummary(response.data || {} as BackendTransactionSummary);
         return summary;
       },
-      providesTags: [{ type: 'Summary', id: 'LIST' }],
+      providesTags: [{ type: 'Summary' }],
     }),
 
     // Bulk delete transactions

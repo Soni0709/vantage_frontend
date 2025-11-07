@@ -83,8 +83,10 @@ export const budgetsApi = baseApi.injectEndpoints({
           params.append('is_active', filters.isActive.toString());
         
         const queryString = params.toString();
-        // Return final URL depending on whether filters exist
-        return queryString ? `/budgets?${queryString}` : '/budgets';
+        // Return final URL as object with url property
+        return {
+          url: queryString ? `/budgets?${queryString}` : '/budgets'
+        };
       },
       // Convert backend budgets → frontend Budget[]
       transformResponse: (response: { success: boolean; data: { budgets: BackendBudget[] } }) =>
@@ -98,7 +100,9 @@ export const budgetsApi = baseApi.injectEndpoints({
 
     // 🧩 GET: single budget by ID
     getBudget: builder.query<Budget, string>({
-      query: (id) => `/budgets/${id}`,
+      query: (id) => ({
+        url: `/budgets/${id}`
+      }),
       transformResponse: (response: { success: boolean; data: { budget: BackendBudget } }) =>
         transformBudget(response.data.budget),
       providesTags: (result, error, id) => [{ type: 'Budget', id }],
@@ -167,7 +171,9 @@ export const budgetsApi = baseApi.injectEndpoints({
 
     // 🧩 GET: overall summary across all budgets
     getBudgetSummary: builder.query<BudgetSummary, void>({
-      query: () => '/budgets/summary',
+      query: () => ({
+        url: '/budgets/summary'
+      }),
       transformResponse: (response: { success: boolean; data: BackendBudgetSummary }) =>
         transformSummary(response.data),
       providesTags: [{ type: 'Summary' }],
@@ -182,7 +188,9 @@ export const budgetsApi = baseApi.injectEndpoints({
         if (filters?.severity) params.append('severity', filters.severity);
         
         const queryString = params.toString();
-        return queryString ? `/budgets/alerts?${queryString}` : '/budgets/alerts';
+        return {
+          url: queryString ? `/budgets/alerts?${queryString}` : '/budgets/alerts'
+        };
       },
       transformResponse: (response: { success: boolean; data: { alerts: BackendBudgetAlert[] } }) =>
         response.data.alerts.map(transformAlert),
@@ -205,12 +213,12 @@ export const budgetsApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // 🧩 PATCH: mark an alert as read
+    // 🧩 POST: mark an alert as read
     markAlertRead: builder.mutation<void, { budgetId: string; alertId: string }>({
-      query: ({ budgetId, alertId }) => ({
-        url: `/budgets/${budgetId}/alerts/${alertId}/read`,
-        method: 'PATCH',
-      }),
+    query: ({ budgetId, alertId }) => ({
+    url: `/budgets/${budgetId}/alerts/${alertId}/read`,
+    method: 'PATCH',
+    }),
       invalidatesTags: (result, error, { alertId }) => [
         { type: 'Alert', id: alertId },
         { type: 'Alert', id: 'LIST' },
@@ -244,7 +252,7 @@ export const {
   useUpdateBudgetMutation,      // PUT /budgets/:id
   useDeleteBudgetMutation,      // DELETE /budgets/:id
   useGetBudgetSummaryQuery,     // GET /budgets/summary
-  useGetAlertsQuery,            // GET /budgets/alerts
+  useGetAlertsQuery,            // GET /budgets/alerts with filters
   useRefreshBudgetsMutation,    // POST /budgets/refresh
   useMarkAlertReadMutation,     // PATCH /budgets/:id/alerts/:alertId/read
   useAcknowledgeAlertMutation,  // PATCH /budgets/:id/alerts/:alertId/acknowledge

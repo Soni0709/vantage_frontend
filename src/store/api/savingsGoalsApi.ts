@@ -31,14 +31,18 @@ export const savingsGoalsApi = baseApi.injectEndpoints({
 
     // GET /api/v1/savings_goals/summary
     getSavingsGoalsSummary: builder.query<SavingsGoalSummary, void>({
-      query: () => '/savings_goals/summary',
+      query: () => ({
+        url: '/savings_goals/summary'
+      }),
       transformResponse: (response: ApiResponse<SavingsGoalSummary>) => response.data,
       providesTags: [{ type: 'SavingsGoal', id: 'SUMMARY' }],
     }),
 
     // GET /api/v1/savings_goals/:id
     getSavingsGoal: builder.query<SavingsGoal, string>({
-      query: (id) => `/savings_goals/${id}`,
+      query: (id) => ({
+        url: `/savings_goals/${id}`
+      }),
       transformResponse: (response: ApiResponse<{ savings_goal: SavingsGoal }>) => 
         response.data.savings_goal,
       providesTags: (result, error, id) => [{ type: 'SavingsGoal', id }],

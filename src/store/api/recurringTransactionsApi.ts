@@ -46,11 +46,13 @@ export const recurringTransactionsApi = baseApi.injectEndpoints({
     // Get all recurring transactions
     getRecurringTransactions: builder.query<RecurringTransaction[], { active?: boolean } | void>({
       query: (params) => {
-        if (!params) return '/recurring_transactions';
+        if (!params) return { url: '/recurring_transactions' };
         const queryParams = new URLSearchParams();
         // Backend expects 'is_active' not 'active'
         if (params.active !== undefined) queryParams.append('is_active', params.active.toString());
-        return `/recurring_transactions?${queryParams.toString()}`;
+        return {
+          url: `/recurring_transactions?${queryParams.toString()}`
+        };
       },
       transformResponse: (response: ApiResponse<{ recurring_transactions: BackendRecurringTransaction[] }>) => {
         if (!response.success || !response.data) {
@@ -69,7 +71,9 @@ export const recurringTransactionsApi = baseApi.injectEndpoints({
 
     // Get single recurring transaction
     getRecurringTransaction: builder.query<RecurringTransaction, string>({
-      query: (id) => `/recurring_transactions/${id}`,
+      query: (id) => ({
+        url: `/recurring_transactions/${id}`
+      }),
       transformResponse: (response: ApiResponse<{ recurring_transaction: BackendRecurringTransaction }>) => {
         if (!response.success || !response.data) {
           throw new Error(response.message || 'Failed to fetch recurring transaction');
@@ -205,7 +209,7 @@ export const recurringTransactionsApi = baseApi.injectEndpoints({
       invalidatesTags: [
         { type: 'Transaction', id: 'LIST' },
         { type: 'RecurringTransaction', id: 'LIST' },
-        { type: 'Summary', id: 'LIST' },
+        { type: 'Summary' },
       ],
     }),
 
@@ -216,7 +220,9 @@ export const recurringTransactionsApi = baseApi.injectEndpoints({
     >({
       query: (params) => {
         const days = params?.days || 30;
-        return `/recurring_transactions/upcoming?days=${days}`;
+        return {
+          url: `/recurring_transactions/upcoming?days=${days}`
+        };
       },
       transformResponse: (response: ApiResponse<{
         recurring_transactions: BackendRecurringTransaction[];
