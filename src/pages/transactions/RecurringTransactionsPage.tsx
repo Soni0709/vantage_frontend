@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
 import { useRecurringTransactions } from '../../hooks/useTransactions';
 import { RecurringTransactionModal } from '../../components/recurring';
 import { formatINR } from '../../utils';
@@ -9,8 +7,6 @@ import { DashboardLayout, PageHeader } from '../../components/layout';
 import type { CreateRecurringTransactionData, RecurringTransaction } from '../../types/transaction';
 
 const RecurringTransactionsPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { currentUser } = useAuth();
   const {
     recurring,
     upcoming,
