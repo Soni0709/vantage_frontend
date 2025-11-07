@@ -49,6 +49,7 @@ const BudgetCharts: React.FC = () => {
 
   // Custom tooltip - MEMOIZED
   const CustomTooltip = useMemo(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return ({ active, payload }: any) => {
       if (active && payload && payload.length) {
         return (
@@ -209,10 +210,8 @@ const BudgetCharts: React.FC = () => {
                 data={categoryData}
               >
                 <RadialBar
-                  minAngle={15}
                   label={{ position: 'insideStart', fill: '#fff', fontSize: 12 }}
                   background
-                  clockWise
                   dataKey="percentage"
                 >
                   {categoryData.map((entry, index) => (
