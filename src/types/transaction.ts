@@ -196,6 +196,14 @@ export interface PaginationParams {
   perPage: number;
 }
 
+export interface BackendPagination {
+  current_page?: number;
+  per_page?: number;
+  total_pages?: number;
+  total_count?: number;
+  [key: string]: unknown;
+}
+
 export interface PaginatedResponse<T> {
   data: T[];
   pagination: {

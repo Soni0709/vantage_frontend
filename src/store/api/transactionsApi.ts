@@ -7,6 +7,7 @@ import type {
   TransactionSummary,
   BackendTransaction,
   BackendTransactionSummary,
+  BackendPagination,
   PaginationParams,
   PaginatedResponse,
 } from '../../types/transaction';
@@ -57,6 +58,16 @@ const transformSummary = (backendSummary: BackendTransactionSummary): Transactio
     },
     incomeByCategory: backendSummary.income_by_category,
     expenseByCategory: backendSummary.expense_by_category,
+  };
+};
+
+// Transform backend pagination to frontend format
+const transformPagination = (backendPagination: BackendPagination) => {
+  return {
+    currentPage: backendPagination.current_page || 1,
+    perPage: backendPagination.per_page || 20,
+    totalPages: backendPagination.total_pages || 1,
+    totalCount: backendPagination.total_count || 0,
   };
 };
 
@@ -120,19 +131,21 @@ export const transactionsApi = baseApi.injectEndpoints({
       },
       transformResponse: (response: ApiResponse<{
         transactions: BackendTransaction[];
-        pagination: any;
+        pagination: BackendPagination;
       }>) => {
         if (!response.success || !response.data) {
           throw new Error(response.message || 'Failed to fetch transactions');
         }
         return {
           data: response.data.transactions.map(transformTransaction),
-          pagination: response.data.pagination || {
-            currentPage: 1,
-            perPage: 20,
-            totalPages: 1,
-            totalCount: response.data.transactions.length,
-          },
+          pagination: response.data.pagination
+            ? transformPagination(response.data.pagination)
+            : {
+                currentPage: 1,
+                perPage: 20,
+                totalPages: 1,
+                totalCount: response.data.transactions.length,
+              },
         };
       },
       providesTags: (result) =>
