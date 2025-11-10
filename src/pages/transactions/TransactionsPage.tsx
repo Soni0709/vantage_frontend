@@ -1,46 +1,52 @@
 import React, { useState } from 'react';
 import { DashboardLayout, PageHeader } from '../../components/layout';
-import { useTransactions, useCategories } from '../../hooks';
+import { useFilteredTransactions, useCategories } from '../../hooks';
 import { formatINR } from '../../utils';
 import { useToast } from '../../contexts';
+import { useDeleteTransactionMutation } from '../../store/api/transactionsApi';
 import type { TransactionFilters } from '../../types/transaction';
 
 const TransactionsPage: React.FC = () => {
-
-  // Filter state
-  const [filters, setFilters] = useState<TransactionFilters>({});
   const [showFilters, setShowFilters] = useState(false);
-
-  // Get transactions with filters
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  
+  // Use new filtered transactions hook
   const {
     transactions,
     summary,
     isLoading,
     error,
-    delete: deleteTransaction,
-  } = useTransactions(filters);
+    filters,
+    activeFilterCount,
+    updateFilter,
+    clearFilters,
+    applyFilters,
+  } = useFilteredTransactions();
 
   const { incomeCategories, expenseCategories } = useCategories();
+  const [deleteTransaction] = useDeleteTransactionMutation();
+  const toast = useToast();
 
-  // Delete confirmation state
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const allCategories = [...incomeCategories, ...expenseCategories];
 
   // Handle filter changes
   const handleFilterChange = (key: keyof TransactionFilters, value: unknown) => {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: value || undefined,
-    }));
+    updateFilter(key, value);
   };
 
-  // Clear all filters
+  // Apply filters and fetch
+  const handleApplyFilters = () => {
+    console.log('✅ User clicked Apply - Current filters:', filters);
+    applyFilters();
+  };
+
+  // Clear and refetch
   const handleClearFilters = () => {
-    setFilters({});
+    clearFilters();
+    setTimeout(() => applyFilters(), 0); // Apply after clearing
   };
 
-  const toast = useToast();
-
-  // Handle delete transaction
+  // Handle delete
   const handleDeleteTransaction = async (id: string) => {
     try {
       await deleteTransaction(id);
@@ -52,28 +58,7 @@ const TransactionsPage: React.FC = () => {
     }
   };
 
-  // Count active filters
-  const activeFilterCount = Object.values(filters).filter((v) => v !== undefined && v !== '').length;
-
-  // Get all categories - handle both string and object formats
-  const getCategoryName = (cat: string | { name?: string }): string => {
-    if (typeof cat === 'string') return cat;
-    return cat.name || '';
-  };
-  
-  const getCategoryValue = (cat: string | { name?: string }): string => {
-    if (typeof cat === 'string') return cat;
-    return cat.name || '';
-  };
-  
-  const getCategoryKey = (cat: string | { id?: string; name?: string }, index: number): string => {
-    if (typeof cat === 'string') return cat;
-    return cat.id || cat.name || `cat-${index}`;
-  };
-
-  const allCategories = [...incomeCategories, ...expenseCategories];
-
-  if (isLoading) {
+  if (isLoading && transactions.length === 0) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-96">
@@ -109,7 +94,7 @@ const TransactionsPage: React.FC = () => {
 
         {/* Search & Filter Bar */}
         <div className="bg-white/[0.02] backdrop-blur-xl rounded-2xl p-6 border border-white/5">
-          {/* Search Box */}
+          {/* Search and Controls */}
           <div className="flex items-center gap-4 mb-4">
             <div className="flex-1 relative">
               <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,6 +105,7 @@ const TransactionsPage: React.FC = () => {
                 placeholder="Search transactions by description..."
                 value={filters.search || ''}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleApplyFilters()}
                 className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:bg-white/10 transition-all"
               />
             </div>
@@ -156,18 +142,25 @@ const TransactionsPage: React.FC = () => {
           {/* Filter Panel */}
           {showFilters && (
             <div className="pt-4 border-t border-white/10">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 {/* Type Filter */}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Type</label>
                   <select
                     value={filters.type || ''}
                     onChange={(e) => handleFilterChange('type', e.target.value)}
-                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors cursor-pointer hover:bg-white/10 appearance-none"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 0.5rem center',
+                      backgroundSize: '1.5em 1.5em',
+                      paddingRight: '2.5rem'
+                    }}
                   >
-                    <option value="">All Types</option>
-                    <option value="income">Income</option>
-                    <option value="expense">Expense</option>
+                    <option value="" style={{ backgroundColor: '#1e293b', color: 'white' }}>All Types</option>
+                    <option value="income" style={{ backgroundColor: '#1e293b', color: 'white' }}>Income</option>
+                    <option value="expense" style={{ backgroundColor: '#1e293b', color: 'white' }}>Expense</option>
                   </select>
                 </div>
 
@@ -177,14 +170,24 @@ const TransactionsPage: React.FC = () => {
                   <select
                     value={filters.category || ''}
                     onChange={(e) => handleFilterChange('category', e.target.value)}
-                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors cursor-pointer hover:bg-white/10 appearance-none"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 0.5rem center',
+                      backgroundSize: '1.5em 1.5em',
+                      paddingRight: '2.5rem'
+                    }}
                   >
-                    <option value="">All Categories</option>
-                    {allCategories.map((cat, index) => (
-                      <option key={getCategoryKey(cat, index)} value={getCategoryValue(cat)}>
-                        {getCategoryName(cat)}
-                      </option>
-                    ))}
+                    <option value="" style={{ backgroundColor: '#1e293b', color: 'white' }}>All Categories</option>
+                    {allCategories.map((cat, index) => {
+                      const name = typeof cat === 'string' ? cat : cat.name || '';
+                      return (
+                        <option key={index} value={name} style={{ backgroundColor: '#1e293b', color: 'white' }}>
+                          {name}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
 
@@ -217,7 +220,7 @@ const TransactionsPage: React.FC = () => {
                     type="number"
                     placeholder="0"
                     value={filters.minAmount || ''}
-                    onChange={(e) => handleFilterChange('minAmount', e.target.value ? parseFloat(e.target.value) : undefined)}
+                    onChange={(e) => handleFilterChange('minAmount', e.target.value ? parseFloat(e.target.value) : '')}
                     className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
                   />
                 </div>
@@ -229,25 +232,21 @@ const TransactionsPage: React.FC = () => {
                     type="number"
                     placeholder="∞"
                     value={filters.maxAmount || ''}
-                    onChange={(e) => handleFilterChange('maxAmount', e.target.value ? parseFloat(e.target.value) : undefined)}
+                    onChange={(e) => handleFilterChange('maxAmount', e.target.value ? parseFloat(e.target.value) : '')}
                     className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
                   />
                 </div>
 
-                {/* Recurring Filter */}
-                <div className="lg:col-span-2">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Transaction Source</label>
-                  <select
-                    value={filters.isRecurring === undefined ? '' : filters.isRecurring.toString()}
-                    onChange={(e) => handleFilterChange('isRecurring', e.target.value === '' ? undefined : e.target.value === 'true')}
-                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
-                  >
-                    <option value="">All Transactions</option>
-                    <option value="true">From Recurring Only</option>
-                    <option value="false">Manual Only</option>
-                  </select>
-                </div>
+
               </div>
+
+              {/* Apply Button */}
+              <button
+                onClick={handleApplyFilters}
+                className="w-full px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium transition-colors"
+              >
+                Apply Filters
+              </button>
             </div>
           )}
         </div>
