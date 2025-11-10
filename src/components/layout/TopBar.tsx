@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useGetAlertsQuery, useMarkAlertReadMutation, useGetSavingsGoalsSummaryQuery } from '../../store/api';
 import { ThemeToggle } from '../ui';
 import type { BudgetAlert } from '../../types';
@@ -24,6 +25,7 @@ interface Notification {
 const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const { mode } = useTheme();
   
   const alertFilters = useMemo(() => ({ isRead: false }), []);
   const { data: budgetAlerts = [] } = useGetAlertsQuery(alertFilters);
@@ -173,9 +175,23 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
   };
 
   return (
-    <header className="sticky top-0 z-30 border-b border-gray-200 dark:border-white/5 backdrop-blur-xl bg-white/50" style={{backgroundImage: 'linear-gradient(to right, rgba(15, 23, 42, 0.8), rgba(88, 28, 135, 0.8), rgba(15, 23, 42, 0.8))'}}>
+    <header 
+      className="sticky top-0 z-30 border-b backdrop-blur-xl transition-all duration-200"
+      style={{
+        background: mode === 'dark' 
+          ? 'rgba(15, 23, 42, 0.6)'
+          : 'white',
+        borderColor: mode === 'dark'
+          ? 'rgba(255, 255, 255, 0.05)'
+          : 'rgb(229, 231, 235)',
+        color: mode === 'dark' ? 'white' : 'rgb(17, 24, 39)'
+      }}
+    >
       <div className="flex items-center justify-between h-16 px-4 sm:px-6">
-        <button onClick={onMenuClick} className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors text-gray-900 dark:text-white">
+        <button onClick={onMenuClick} className="lg:hidden p-2 rounded-lg transition-colors" style={{
+          color: 'currentColor',
+          backgroundColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgb(243, 244, 246)'
+        }}>
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
@@ -186,10 +202,17 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
             <input
               type="text"
               placeholder="Search transactions, budgets, or categories..."
-              className="w-full px-4 py-2 pl-10 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-xl text-sm focus:outline-none focus:border-purple-500/50 focus:bg-gray-100 dark:focus:bg-white/10 transition-all placeholder-gray-500 dark:placeholder-gray-400"
+              className="w-full px-4 py-2 pl-10 rounded-xl text-sm focus:outline-none transition-all"
+              style={{
+                background: mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgb(249, 250, 251)',
+                border: `1px solid ${mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgb(229, 231, 235)'}`,
+                color: mode === 'dark' ? 'white' : 'rgb(17, 24, 39)',
+              }}
               disabled
             />
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{
+              color: mode === 'dark' ? 'rgb(156, 163, 175)' : 'rgb(107, 114, 128)'
+            }}>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
@@ -199,8 +222,13 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
           <ThemeToggle />
           
           <div className="relative">
-            <button onClick={() => setShowNotifications(!showNotifications)} className="relative p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors text-gray-900 dark:text-white">
-              <svg className="w-5 h-5 text-gray-900 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button onClick={() => setShowNotifications(!showNotifications)} className="relative p-2 rounded-lg transition-colors" style={{
+              color: 'currentColor',
+              backgroundColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
+            }}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{
+                color: 'currentColor'
+              }}>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
               {unreadCount > 0 && (
@@ -213,10 +241,20 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
             {showNotifications && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowNotifications(false)} />
-                <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-gradient-to-b from-gray-50 to-white dark:from-slate-800 dark:to-slate-900 border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl z-20">
-                  <div className="p-4 border-b border-gray-200 dark:border-white/10">
+                <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 border rounded-xl shadow-2xl z-20" style={{
+                  background: mode === 'dark' 
+                    ? 'linear-gradient(to bottom, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95))'
+                    : 'linear-gradient(to bottom, rgb(249, 250, 251), white)',
+                  borderColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgb(229, 231, 235)'
+                }}>
+                  <div className="p-4 border-b" style={{
+                  borderColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgb(229, 231, 235)',
+                  background: mode === 'dark' ? 'rgba(15, 23, 42, 0.5)' : 'rgb(249, 250, 251)',
+                }}>
                     <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-gray-900 dark:text-white">Notifications</h3>
+                      <h3 className="font-semibold" style={{
+                    color: mode === 'dark' ? 'white' : 'rgb(17, 24, 39)'
+                  }}>Notifications</h3>
                       {unreadCount > 0 && (
                         <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 text-xs font-semibold rounded-md">
                           {unreadCount} new
@@ -224,25 +262,36 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
                       )}
                     </div>
                   </div>
-                  <div className="max-h-96 overflow-y-auto">
+                  <div className="max-h-96 overflow-y-auto" style={{
+                    background: mode === 'dark' ? 'transparent' : 'transparent'
+                  }}>
                     {allNotifications.length > 0 ? (
                       allNotifications.map((notification) => {
                         const styles = getSeverityStyles(notification.severity);
                         return (
                           <div key={notification.id} className="p-4 border-b border-gray-100 dark:border-white/5 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
                             <div className="flex items-start gap-3">
-                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${styles.bg}`}>
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0`} style={{
+                                background: mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgb(243, 244, 246)'
+                              }}>
                                 <svg className={`w-4 h-4 ${styles.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={getSeverityIcon(notification.severity)} />
                                 </svg>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm text-gray-700 dark:text-gray-300 leading-snug mb-2">{notification.message}</p>
+                                <p className="text-sm leading-snug mb-2" style={{
+                              color: mode === 'dark' ? 'rgb(209, 213, 219)' : 'rgb(75, 85, 99)'
+                            }}>{notification.message}</p>
                                 <div className="flex items-center gap-2 mb-2">
-                                  <span className={`px-1.5 py-0.5 text-xs font-semibold rounded ${styles.badge}`}>
+                                  <span className={`px-1.5 py-0.5 text-xs font-semibold rounded`} style={{
+                                    background: mode === 'dark' ? 'rgba(168, 85, 247, 0.2)' : 'rgba(168, 85, 247, 0.1)',
+                                    color: mode === 'dark' ? 'rgb(196, 181, 253)' : 'rgb(126, 34, 206)'
+                                  }}>
                                     {getTypeLabel(notification.type)}
                                   </span>
-                                  <span className="text-xs text-gray-500 dark:text-gray-500">{formatTimestamp(notification.timestamp)}</span>
+                                  <span className="text-xs" style={{
+                                    color: mode === 'dark' ? 'rgb(107, 114, 128)' : 'rgb(107, 114, 128)'
+                                  }}>{formatTimestamp(notification.timestamp)}</span>
                                 </div>
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <button
@@ -283,7 +332,10 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
             )}
           </div>
 
-          <button onClick={() => navigate('/profile')} className="flex items-center gap-2 p-1.5 hover:bg-gray-100 dark:hover:bg-white/5 rounded-xl transition-colors">
+          <button onClick={() => navigate('/profile')} className="flex items-center gap-2 p-1.5 rounded-xl transition-colors" style={{
+              color: 'currentColor',
+              backgroundColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
+            }}>
             <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-xs font-semibold text-white">
               {currentUser?.firstName?.[0]}{currentUser?.lastName?.[0]}
             </div>

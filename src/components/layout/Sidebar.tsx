@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../hooks';
+import { useTheme } from '../../contexts/ThemeContext';
 import { cn } from '../../utils';
 
 interface SidebarProps {
@@ -71,6 +72,19 @@ const navigation = [
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
   const { currentUser } = useAuth();
+  const { mode } = useTheme();
+
+  const sidebarStyle = mode === 'dark'
+    ? {
+        background: 'linear-gradient(to bottom, rgb(15, 23, 42), rgb(15, 23, 42), rgb(2, 6, 23))',
+        borderColor: 'rgba(255, 255, 255, 0.05)',
+        color: 'white'
+      }
+    : {
+        background: 'white',
+        borderColor: 'rgb(229, 231, 235)',
+        color: 'rgb(17, 24, 39)'
+      };
 
   return (
     <>
@@ -84,19 +98,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggl
 
       {/* Sidebar */}
       <aside
+        style={sidebarStyle}
         className={cn(
-          "fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-r border-white/5 transition-all duration-300 ease-in-out",
+          "fixed top-0 left-0 z-40 h-screen border-r transition-all duration-200 ease-in-out",
           isCollapsed ? "w-20" : "w-64",
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
         <div className="flex flex-col h-full">
           {/* Logo & Collapse Button */}
-          <div className="flex items-center justify-between p-6 border-b border-white/5">
+          <div 
+            className="flex items-center justify-between p-6 border-b transition-colors duration-200"
+            style={{ borderColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgb(229, 231, 235)' }}
+          >
             {!isCollapsed && (
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center">
-                  <span className="text-lg font-bold">V</span>
+                  <span className="text-lg font-bold text-white">V</span>
                 </div>
                 <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
                   Vantage
@@ -106,7 +124,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggl
             
             {isCollapsed && (
               <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center mx-auto">
-                <span className="text-lg font-bold">V</span>
+                <span className="text-lg font-bold text-white">V</span>
               </div>
             )}
 
@@ -119,7 +137,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggl
                   onToggleCollapse();
                 }
               }}
-              className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+              className="p-2 rounded-lg transition-colors duration-200"
+              style={{ 
+                color: 'currentColor',
+                backgroundColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgb(243, 244, 246)'
+              }}
               title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {isCollapsed ? (
@@ -141,15 +163,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggl
                 key={item.name}
                 to={item.href}
                 onClick={() => onClose()}
-                className={({ isActive }) =>
+                // eslint-disable-next-line no-empty-pattern
+                className={({ }) =>
                   cn(
                     "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group relative",
-                    isActive
-                      ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
-                      : "text-gray-400 hover:text-white hover:bg-white/5",
                     isCollapsed && "justify-center"
                   )
                 }
+                style={({ isActive }: any) => ({
+                  backgroundColor: isActive ? 'rgba(168, 85, 247, 0.1)' : 'transparent',
+                  border: isActive ? '1px solid rgba(168, 85, 247, 0.2)' : 'none',
+                  color: isActive ? (mode === 'dark' ? '#c084fc' : '#a855f7') : 'currentColor'
+                })}
                 title={isCollapsed ? item.name : undefined}
               >
                 {({ isActive }) => (
@@ -157,10 +182,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggl
                     {isActive && !isCollapsed && (
                       <div className="absolute left-0 w-1 h-8 bg-gradient-to-b from-purple-500 to-blue-500 rounded-r-full" />
                     )}
-                    <div className={cn(
-                      "transition-transform group-hover:scale-110",
-                      isActive && "text-purple-400"
-                    )}>
+                    <div className="transition-transform group-hover:scale-110">
                       {item.icon}
                     </div>
                     {!isCollapsed && (
@@ -180,28 +202,46 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggl
           </nav>
 
           {/* User Profile Section */}
-          <div className="p-4 border-t border-white/5">
+          <div 
+            className="p-4 border-t transition-colors duration-200"
+            style={{ borderColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgb(229, 231, 235)' }}
+          >
             <NavLink
               to="/profile"
               onClick={onClose}
               className={cn(
-                "w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-all group",
+                "w-full flex items-center gap-3 p-3 rounded-xl transition-all group",
                 isCollapsed && "justify-center"
               )}
+              style={{
+                backgroundColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgb(243, 244, 246)'
+              }}
               title={isCollapsed ? `${currentUser?.firstName} ${currentUser?.lastName}` : undefined}
             >
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 text-white">
                 {currentUser?.firstName?.[0]}{currentUser?.lastName?.[0]}
               </div>
               {!isCollapsed && (
                 <>
                   <div className="flex-1 text-left min-w-0">
-                    <p className="text-sm font-medium text-white truncate">
+                    <p className="text-sm font-medium truncate">
                       {currentUser?.firstName} {currentUser?.lastName}
                     </p>
-                    <p className="text-xs text-gray-400 truncate">{currentUser?.email}</p>
+                    <p className="text-xs truncate" style={{
+                      color: mode === 'dark' ? 'rgb(156, 163, 175)' : 'rgb(107, 114, 128)'
+                    }}>
+                      {currentUser?.email}
+                    </p>
                   </div>
-                  <svg className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg 
+                    className="w-4 h-4 transition-colors"
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                    style={{
+                      color: mode === 'dark' ? 'rgb(156, 163, 175)' : 'rgb(107, 114, 128)'
+                    }}
+                  >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                   </svg>
                 </>
