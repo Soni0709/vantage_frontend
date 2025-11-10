@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { createSelector } from 'reselect';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type {
   Transaction,
@@ -213,46 +214,81 @@ export const {
 } = transactionSlice.actions;
 
 // Selectors
-export const selectActiveFilters = (state: { transactions: TransactionState }) => 
-  state.transactions.activeFilters;
+const selectTransactionState = (state: { transactions: TransactionState }) => 
+  state.transactions;
 
-export const selectCategories = (state: { transactions: TransactionState }) => 
+const selectCategoriesRaw = (state: { transactions: TransactionState }) => 
   state.transactions.categories;
 
-export const selectIncomeCategories = (state: { transactions: TransactionState }) => 
-  state.transactions.categories.filter((c) => c.type === 'income' || c.type === 'both');
+export const selectActiveFilters = createSelector(
+  [selectTransactionState],
+  (state) => state.activeFilters
+);
 
-export const selectExpenseCategories = (state: { transactions: TransactionState }) => 
-  state.transactions.categories.filter((c) => c.type === 'expense' || c.type === 'both');
+export const selectCategories = createSelector(
+  [selectCategoriesRaw],
+  (categories) => categories
+);
 
-export const selectSelectedTransaction = (state: { transactions: TransactionState }) => 
-  state.transactions.selectedTransaction;
+// Memoized selectors for filtered categories
+export const selectIncomeCategories = createSelector(
+  [selectCategoriesRaw],
+  (categories) => categories.filter((c) => c.type === 'income' || c.type === 'both')
+);
 
-export const selectIsAddModalOpen = (state: { transactions: TransactionState }) => 
-  state.transactions.isAddModalOpen;
+export const selectExpenseCategories = createSelector(
+  [selectCategoriesRaw],
+  (categories) => categories.filter((c) => c.type === 'expense' || c.type === 'both')
+);
 
-export const selectIsEditModalOpen = (state: { transactions: TransactionState }) => 
-  state.transactions.isEditModalOpen;
+export const selectSelectedTransaction = createSelector(
+  [selectTransactionState],
+  (state) => state.selectedTransaction
+);
 
-export const selectIsDeleteConfirmOpen = (state: { transactions: TransactionState }) => 
-  state.transactions.isDeleteConfirmOpen;
+export const selectIsAddModalOpen = createSelector(
+  [selectTransactionState],
+  (state) => state.isAddModalOpen
+);
 
-export const selectSelectedTransactionIds = (state: { transactions: TransactionState }) => 
-  state.transactions.selectedTransactionIds;
+export const selectIsEditModalOpen = createSelector(
+  [selectTransactionState],
+  (state) => state.isEditModalOpen
+);
 
-export const selectViewMode = (state: { transactions: TransactionState }) => 
-  state.transactions.viewMode;
+export const selectIsDeleteConfirmOpen = createSelector(
+  [selectTransactionState],
+  (state) => state.isDeleteConfirmOpen
+);
 
-export const selectSortBy = (state: { transactions: TransactionState }) => 
-  state.transactions.sortBy;
+export const selectSelectedTransactionIds = createSelector(
+  [selectTransactionState],
+  (state) => state.selectedTransactionIds
+);
 
-export const selectSortOrder = (state: { transactions: TransactionState }) => 
-  state.transactions.sortOrder;
+export const selectViewMode = createSelector(
+  [selectTransactionState],
+  (state) => state.viewMode
+);
 
-export const selectShowRecurring = (state: { transactions: TransactionState }) => 
-  state.transactions.showRecurring;
+export const selectSortBy = createSelector(
+  [selectTransactionState],
+  (state) => state.sortBy
+);
 
-export const selectRecurringFilter = (state: { transactions: TransactionState }) => 
-  state.transactions.recurringFilter;
+export const selectSortOrder = createSelector(
+  [selectTransactionState],
+  (state) => state.sortOrder
+);
+
+export const selectShowRecurring = createSelector(
+  [selectTransactionState],
+  (state) => state.showRecurring
+);
+
+export const selectRecurringFilter = createSelector(
+  [selectTransactionState],
+  (state) => state.recurringFilter
+);
 
 export default transactionSlice.reducer;
