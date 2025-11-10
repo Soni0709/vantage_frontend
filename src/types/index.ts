@@ -3,6 +3,7 @@ export * from './auth';
 export * from './transaction';
 export * from './budget';
 export * from './savingsGoal';
+export * from './theme';
 
 // Re-export key types explicitly to ensure they're available
 export type {
@@ -54,3 +55,8 @@ export type {
   SavingsGoalSummary,
   AddAmountData
 } from './savingsGoal';
+
+export type {
+  Mode,
+  ThemeContextType
+} from './theme';
