@@ -5,6 +5,7 @@ import { useTransactions, useRecurringTransactions, useSavingsGoals } from '../.
 import { useGetAlertsQuery } from '../../store/api';
 import { formatINR, formatPercentage } from '../../utils';
 import { useToast } from '../../contexts';
+import { useTheme } from '../../contexts/ThemeContext';
 import { AddTransactionModal } from '../../components/modals';
 import { InsightsSection } from '../../components/dashboard';
 import { UnifiedBudgetDashboard, BudgetCharts } from '../../components/budget';
@@ -14,6 +15,8 @@ import type { TransactionFormData } from '../../components/modals';
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const { mode } = useTheme();
+  const isDark = mode === 'dark';
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -134,10 +137,10 @@ const DashboardPage: React.FC = () => {
         {/* Welcome & Quick Actions */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div>
-            <h1 className="text-3xl font-bold mb-1">
+            <h1 className="text-3xl font-bold mb-1" style={{ color: isDark ? 'white' : 'rgb(17, 24, 39)' }}>
               Welcome back, {currentUser?.firstName}
             </h1>
-            <p className="text-gray-400">Here's your financial snapshot</p>
+            <p style={{ color: isDark ? 'rgb(156, 163, 175)' : 'rgb(107, 114, 128)' }}>Here's your financial snapshot</p>
           </div>
           
           <div className="flex flex-wrap gap-3">
@@ -145,22 +148,26 @@ const DashboardPage: React.FC = () => {
               onClick={() => openModal('income')}
               className="px-5 py-2.5 bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 rounded-xl transition-all text-green-400 font-medium text-sm flex items-center gap-2"
             >
-              <span>+</span>
-              <span>Add Income</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+              Add Income
             </button>
             <button 
               onClick={() => openModal('expense')}
               className="px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl transition-all text-red-400 font-medium text-sm flex items-center gap-2"
             >
-              <span>−</span>
-              <span>Add Expense</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+              Add Expense
             </button>
-            <button 
-              onClick={() => navigate('/recurring')}
-              className="px-5 py-2.5 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 rounded-xl transition-all text-purple-400 font-medium text-sm"
-            >
-              Recurring
-            </button>
+            {pendingCount > 0 && (
+              <button
+                onClick={handleProcessRecurring}
+                disabled={isProcessing}
+                className="px-5 py-2.5 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 rounded-xl transition-all text-purple-400 font-medium text-sm flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                Process {pendingCount} Recurring
+              </button>
+            )}
           </div>
         </div>
 
@@ -248,64 +255,88 @@ const DashboardPage: React.FC = () => {
         {/* Financial Overview Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {/* Balance */}
-          <div className="bg-white/[0.02] backdrop-blur-xl rounded-2xl p-6 border border-white/5 hover:border-green-500/20 transition-all group">
+          <div className="rounded-2xl p-6 border backdrop-blur-xl transition-all group" style={{
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.02)' : 'white',
+            borderColor: isDark ? 'rgba(34, 197, 94, 0.2)' : 'rgb(220, 252, 231)',
+            borderWidth: '1px'
+          }}>
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-gray-400">Balance</p>
-              <div className="w-9 h-9 bg-green-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+              <p className="text-sm" style={{ color: isDark ? 'rgb(156, 163, 175)' : 'rgb(107, 114, 128)' }}>Balance</p>
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform" style={{
+                backgroundColor: isDark ? 'rgba(34, 197, 94, 0.1)' : 'rgba(34, 197, 94, 0.1)'
+              }}>
                 <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
-            <h3 className="text-2xl font-bold mb-2">{formatINR(financialData.balance, false)}</h3>
-            <p className={`text-xs font-medium ${percentageChanges.balance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+            <h3 className="text-2xl font-bold mb-2" style={{ color: isDark ? 'white' : 'rgb(17, 24, 39)' }}>{formatINR(financialData.balance, false)}</h3>
+            <p className={`text-xs font-medium`} style={{ color: percentageChanges.balance >= 0 ? (isDark ? 'rgb(134, 239, 172)' : 'rgb(34, 197, 94)') : (isDark ? 'rgb(252, 165, 165)' : 'rgb(239, 68, 68)') }}>
               {formatPercentage(percentageChanges.balance)} vs last month
             </p>
           </div>
 
           {/* Income */}
-          <div className="bg-white/[0.02] backdrop-blur-xl rounded-2xl p-6 border border-white/5 hover:border-blue-500/20 transition-all group">
+          <div className="rounded-2xl p-6 border backdrop-blur-xl transition-all group" style={{
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.02)' : 'white',
+            borderColor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgb(219, 234, 254)',
+            borderWidth: '1px'
+          }}>
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-gray-400">Income</p>
-              <div className="w-9 h-9 bg-blue-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+              <p className="text-sm" style={{ color: isDark ? 'rgb(156, 163, 175)' : 'rgb(107, 114, 128)' }}>Income</p>
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform" style={{
+                backgroundColor: isDark ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.1)'
+              }}>
                 <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
             </div>
-            <h3 className="text-2xl font-bold mb-2">{formatINR(financialData.income, false)}</h3>
-            <p className={`text-xs font-medium ${percentageChanges.income >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
+            <h3 className="text-2xl font-bold mb-2" style={{ color: isDark ? 'white' : 'rgb(17, 24, 39)' }}>{formatINR(financialData.income, false)}</h3>
+            <p className={`text-xs font-medium`} style={{ color: percentageChanges.income >= 0 ? (isDark ? 'rgb(144, 205, 244)' : 'rgb(59, 130, 246)') : (isDark ? 'rgb(252, 165, 165)' : 'rgb(239, 68, 68)') }}>
               {formatPercentage(percentageChanges.income)} vs last month
             </p>
           </div>
 
           {/* Expenses */}
-          <div className="bg-white/[0.02] backdrop-blur-xl rounded-2xl p-6 border border-white/5 hover:border-red-500/20 transition-all group">
+          <div className="rounded-2xl p-6 border backdrop-blur-xl transition-all group" style={{
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.02)' : 'white',
+            borderColor: isDark ? 'rgba(239, 68, 68, 0.2)' : 'rgb(254, 226, 226)',
+            borderWidth: '1px'
+          }}>
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-gray-400">Expenses</p>
-              <div className="w-9 h-9 bg-red-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+              <p className="text-sm" style={{ color: isDark ? 'rgb(156, 163, 175)' : 'rgb(107, 114, 128)' }}>Expenses</p>
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform" style={{
+                backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.1)'
+              }}>
                 <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
                 </svg>
               </div>
             </div>
-            <h3 className="text-2xl font-bold mb-2">{formatINR(financialData.expenses, false)}</h3>
-            <p className={`text-xs font-medium ${percentageChanges.expenses > 0 ? 'text-red-400' : percentageChanges.expenses < 0 ? 'text-green-400' : 'text-gray-400'}`}>
+            <h3 className="text-2xl font-bold mb-2" style={{ color: isDark ? 'white' : 'rgb(17, 24, 39)' }}>{formatINR(financialData.expenses, false)}</h3>
+            <p className={`text-xs font-medium`} style={{ color: percentageChanges.expenses > 0 ? (isDark ? 'rgb(252, 165, 165)' : 'rgb(239, 68, 68)') : percentageChanges.expenses < 0 ? (isDark ? 'rgb(134, 239, 172)' : 'rgb(34, 197, 94)') : (isDark ? 'rgb(156, 163, 175)' : 'rgb(107, 114, 128)') }}>
               {formatPercentage(percentageChanges.expenses)} vs last month
             </p>
           </div>
 
           {/* Savings */}
-          <div className="bg-white/[0.02] backdrop-blur-xl rounded-2xl p-6 border border-white/5 hover:border-purple-500/20 transition-all group">
+          <div className="rounded-2xl p-6 border backdrop-blur-xl transition-all group" style={{
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.02)' : 'white',
+            borderColor: isDark ? 'rgba(168, 85, 247, 0.2)' : 'rgb(243, 232, 255)',
+            borderWidth: '1px'
+          }}>
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-gray-400">Savings Goal</p>
-              <div className="w-9 h-9 bg-purple-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+              <p className="text-sm" style={{ color: isDark ? 'rgb(156, 163, 175)' : 'rgb(107, 114, 128)' }}>Savings Goal</p>
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform" style={{
+                backgroundColor: isDark ? 'rgba(168, 85, 247, 0.1)' : 'rgba(168, 85, 247, 0.1)'
+              }}>
                 <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                 </svg>
               </div>
             </div>
-            <h3 className="text-2xl font-bold mb-2">{formatINR(financialData.currentSavings, false)}</h3>
+            <h3 className="text-2xl font-bold mb-2" style={{ color: isDark ? 'white' : 'rgb(17, 24, 39)' }}>{formatINR(financialData.currentSavings, false)}</h3>
             <div className="flex items-center gap-2">
               <div className="flex-1 bg-gray-800/50 rounded-full h-1.5">
                 <div 
