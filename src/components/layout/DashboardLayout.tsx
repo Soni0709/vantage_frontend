@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import ToastContainer from '../ui/Toast';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
+  const { mode } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Load collapsed state from localStorage
@@ -25,13 +27,26 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
 
+  // Dynamic styles based on mode
+  const containerStyle = mode === 'dark' 
+    ? {
+        background: 'linear-gradient(to bottom right, rgb(15, 23, 42), rgb(15, 23, 42), rgb(2, 6, 23))',
+        color: 'white'
+      }
+    : {
+        background: 'white',
+        color: 'rgb(17, 24, 39)'
+      };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      {/* Ambient Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"></div>
-      </div>
+    <div className="min-h-screen" style={containerStyle}>
+      {/* Ambient Background - only in dark mode */}
+      {mode === 'dark' && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"></div>
+        </div>
+      )}
 
       {/* Sidebar */}
       <Sidebar 
