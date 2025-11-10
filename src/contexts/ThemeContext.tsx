@@ -1,54 +1,62 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-
-type Theme = 'light' | 'dark';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import type { Mode } from '../types/theme';
 
 interface ThemeContextType {
-  theme: Theme;
-  toggleTheme: () => void;
+  mode: Mode;
+  toggleMode: () => void;
+  setMode: (mode: Mode) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const DEFAULT_MODE: Mode = 'dark';
+
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Get theme from localStorage or default to dark
-  const [theme, setTheme] = useState<Theme>(() => {
-    const stored = localStorage.getItem('vantage_theme') as Theme;
-    return stored || 'dark';
+  const [mode, setModeState] = useState<Mode>(() => {
+    try {
+      const stored = localStorage.getItem('vantage_theme_mode') as Mode;
+      return stored || DEFAULT_MODE;
+    } catch {
+      return DEFAULT_MODE;
+    }
   });
 
+  // Apply theme to document
   useEffect(() => {
     const root = document.documentElement;
     
-    // Add changing-theme class to disable transitions
-    root.classList.add('changing-theme');
-    
-    // Remove both theme classes
+    // Apply mode - remove both first, then add the correct one
     root.classList.remove('light', 'dark');
+    root.classList.add(mode);
     
-    // Add current theme class
-    root.classList.add(theme);
+    // Log for debugging
+    console.log('Theme updated:', mode);
     
     // Save to localStorage
-    localStorage.setItem('vantage_theme', theme);
-    
-    // Remove changing-theme class after a brief delay
-    setTimeout(() => {
-      root.classList.remove('changing-theme');
-    }, 50);
-  }, [theme]);
+    localStorage.setItem('vantage_theme_mode', mode);
+  }, [mode]);
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  const toggleMode = useCallback(() => {
+    setModeState(prev => prev === 'light' ? 'dark' : 'light');
+  }, []);
+
+  const setMode = useCallback((newMode: Mode) => {
+    setModeState(newMode);
+  }, []);
+
+  const value: ThemeContextType = {
+    mode,
+    toggleMode,
+    setMode,
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );
 };
 
-// Custom hook to use theme context
 // eslint-disable-next-line react-refresh/only-export-components
 export const useTheme = () => {
   const context = useContext(ThemeContext);
