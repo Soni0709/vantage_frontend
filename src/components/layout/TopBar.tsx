@@ -173,7 +173,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
   };
 
   return (
-    <header className="sticky top-0 z-30 border-b border-gray-200 dark:border-white/5 backdrop-blur-xl bg-white/50 dark:bg-black/20">
+    <header className="sticky top-0 z-30 border-b border-gray-200 dark:border-white/5 backdrop-blur-xl bg-white/50" style={{backgroundImage: 'linear-gradient(to right, rgba(15, 23, 42, 0.8), rgba(88, 28, 135, 0.8), rgba(15, 23, 42, 0.8))'}}>
       <div className="flex items-center justify-between h-16 px-4 sm:px-6">
         <button onClick={onMenuClick} className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors text-gray-900 dark:text-white">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
