@@ -6,16 +6,17 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Light mode (default) */
 body {
-  background: linear-gradient(to bottom right, rgb(15 23 42), rgb(15 23 42), rgb(2 6 23));
-  color: white;
+  background: linear-gradient(to bottom right, rgb(249 250 251), rgb(255 255 255), rgb(243 244 246));
+  color: rgb(17 24 39);
   min-height: 100vh;
 }
 
-/* Light theme body override */
-html.light body {
-  background: linear-gradient(to bottom right, rgb(249 250 251), rgb(255 255 255), rgb(243 244 246));
-  color: rgb(17 24 39);
+/* Dark theme body override */
+html.dark body {
+  background: linear-gradient(to bottom right, rgb(15 23 42), rgb(15 23 42), rgb(2 6 23));
+  color: white;
 }
 
 /* Custom animations */
