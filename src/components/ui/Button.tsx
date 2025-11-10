@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost';
@@ -18,14 +19,27 @@ const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
+  const { mode } = useTheme();
+  const isDark = mode === 'dark';
+
   const baseClasses = 'font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]';
   
   const variantClasses = {
-    primary: 'bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white focus:ring-purple-500 shadow-lg hover:shadow-xl',
-    secondary: 'bg-gray-100 hover:bg-gray-200 text-gray-900 focus:ring-gray-500 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white',
-    outline: 'border-2 border-purple-500 text-purple-500 hover:bg-purple-500 hover:text-white focus:ring-purple-500 dark:border-purple-400 dark:text-purple-400',
-    danger: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 shadow-lg hover:shadow-xl',
-    ghost: 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:ring-gray-500 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800'
+    primary: isDark
+      ? 'bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white focus:ring-purple-500 shadow-lg hover:shadow-xl focus:ring-offset-gray-900'
+      : 'bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white focus:ring-purple-500 shadow-lg hover:shadow-xl focus:ring-offset-white',
+    secondary: isDark
+      ? 'bg-white/[0.1] hover:bg-white/[0.15] text-white focus:ring-gray-400 border border-white/10'
+      : 'bg-gray-100 hover:bg-gray-200 text-gray-900 focus:ring-gray-500 border border-gray-200',
+    outline: isDark
+      ? 'border-2 border-purple-400 text-purple-400 hover:bg-purple-500/10 focus:ring-purple-400 focus:ring-offset-gray-900'
+      : 'border-2 border-purple-500 text-purple-600 hover:bg-purple-500/10 focus:ring-purple-500 focus:ring-offset-white',
+    danger: isDark
+      ? 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 shadow-lg hover:shadow-xl focus:ring-offset-gray-900'
+      : 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 shadow-lg hover:shadow-xl focus:ring-offset-white',
+    ghost: isDark
+      ? 'text-gray-300 hover:text-white hover:bg-white/[0.05] focus:ring-gray-400 focus:ring-offset-gray-900'
+      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:ring-gray-500 focus:ring-offset-white'
   };
   
   const sizeClasses = {
