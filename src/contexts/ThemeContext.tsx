@@ -1,25 +1,94 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import type { Mode } from '../types/theme';
+import React, { useEffect, useState, useCallback } from 'react';
+import type { Mode, ColorTheme, AutoSwitch, ThemeConfig, ThemeContextType } from '../types/theme';
+import { THEMES } from '../constants/themes';
+import { ThemeContext } from './theme';
 
-interface ThemeContextType {
-  mode: Mode;
-  toggleMode: () => void;
-  setMode: (mode: Mode) => void;
-}
+const DEFAULT_CONFIG: ThemeConfig = {
+  mode: 'dark',
+  colorTheme: 'purple',
+  autoSwitch: 'off',
+  scheduleStart: 6,
+  scheduleEnd: 20,
+};
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+// Load theme immediately and apply to document root
+const loadAndApplyTheme = (): ThemeConfig => {
+  try {
+    const stored = localStorage.getItem('vantage_theme_config');
+    const parsed = stored ? JSON.parse(stored) : {};
+    const config: ThemeConfig = { ...DEFAULT_CONFIG, ...parsed };
+    
+    const root = document.documentElement;
+    
+    // Remove both classes first
+    root.classList.remove('light', 'dark');
+    
+    // Add the correct mode class
+    root.classList.add(config.mode);
+    
+    // Set CSS variables
+    const themeColors = THEMES[config.colorTheme as ColorTheme];
+    root.style.setProperty('--theme-primary', themeColors.primary);
+    root.style.setProperty('--theme-dark', themeColors.dark);
+    root.style.setProperty('--theme-light', themeColors.light);
+    root.style.setProperty('--theme-accent', themeColors.accent);
+    
+    console.log('Theme loaded from storage:', config);
+    return config;
+  } catch (error) {
+    console.error('Error loading theme:', error);
+    return DEFAULT_CONFIG;
+  }
+};
 
-const DEFAULT_MODE: Mode = 'dark';
+// Apply theme immediately on script load (before React renders)
+loadAndApplyTheme();
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [mode, setModeState] = useState<Mode>(() => {
+  const [config, setConfig] = useState<ThemeConfig>(() => {
     try {
-      const stored = localStorage.getItem('vantage_theme_mode') as Mode;
-      return stored || DEFAULT_MODE;
+      const stored = localStorage.getItem('vantage_theme_config');
+      const parsed = stored ? JSON.parse(stored) : {};
+      return { ...DEFAULT_CONFIG, ...parsed } as ThemeConfig;
     } catch {
-      return DEFAULT_MODE;
+      return DEFAULT_CONFIG;
     }
   });
+
+  // Determine effective mode based on autoSwitch
+  const [effectiveMode, setEffectiveMode] = useState<Mode>(config.mode);
+
+  // Update effective mode when config changes or on schedule
+  useEffect(() => {
+    const updateEffectiveMode = () => {
+      if (config.autoSwitch === 'system') {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setEffectiveMode(prefersDark ? 'dark' : 'light');
+      } else if (config.autoSwitch === 'schedule' && config.scheduleStart && config.scheduleEnd) {
+        const now = new Date();
+        const hour = now.getHours();
+        const isNightTime = hour < config.scheduleStart || hour >= config.scheduleEnd;
+        setEffectiveMode(isNightTime ? 'dark' : 'light');
+      } else {
+        setEffectiveMode(config.mode);
+      }
+    };
+
+    updateEffectiveMode();
+
+    // Check every minute if schedule mode is active
+    if (config.autoSwitch === 'schedule') {
+      const interval = setInterval(updateEffectiveMode, 60000);
+      return () => clearInterval(interval);
+    }
+
+    // Listen for system preference changes
+    if (config.autoSwitch === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      mediaQuery.addEventListener('change', updateEffectiveMode);
+      return () => mediaQuery.removeEventListener('change', updateEffectiveMode);
+    }
+  }, [config]);
 
   // Apply theme to document
   useEffect(() => {
@@ -27,27 +96,78 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     // Apply mode - remove both first, then add the correct one
     root.classList.remove('light', 'dark');
-    root.classList.add(mode);
+    root.classList.add(effectiveMode);
     
     // Log for debugging
-    console.log('Theme updated:', mode);
+    console.log('HTML class updated to:', effectiveMode);
+    console.log('HTML classList:', Array.from(root.classList));
+    
+    // Apply theme colors as CSS variables
+    const themeColors = THEMES[config.colorTheme as ColorTheme];
+    root.style.setProperty('--theme-primary', themeColors.primary);
+    root.style.setProperty('--theme-dark', themeColors.dark);
+    root.style.setProperty('--theme-light', themeColors.light);
+    root.style.setProperty('--theme-accent', themeColors.accent);
+    
+    console.log('Theme applied:', { mode: effectiveMode, colorTheme: config.colorTheme });
     
     // Save to localStorage
-    localStorage.setItem('vantage_theme_mode', mode);
-  }, [mode]);
+    localStorage.setItem('vantage_theme_config', JSON.stringify(config));
+  }, [config, effectiveMode]);
 
   const toggleMode = useCallback(() => {
-    setModeState(prev => prev === 'light' ? 'dark' : 'light');
+    setConfig(prev => ({
+      ...prev,
+      mode: prev.mode === 'light' ? 'dark' : 'light',
+      autoSwitch: 'off',
+    }));
   }, []);
 
-  const setMode = useCallback((newMode: Mode) => {
-    setModeState(newMode);
+  const setMode = useCallback((mode: Mode) => {
+    setConfig(prev => ({
+      ...prev,
+      mode,
+      autoSwitch: 'off',
+    }));
   }, []);
+
+  const setColorTheme = useCallback((colorTheme: ColorTheme) => {
+    setConfig(prev => ({
+      ...prev,
+      colorTheme,
+    }));
+  }, []);
+
+  const setAutoSwitch = useCallback((autoSwitch: AutoSwitch) => {
+    setConfig(prev => ({
+      ...prev,
+      autoSwitch,
+    }));
+  }, []);
+
+  const setSchedule = useCallback((start: number, end: number) => {
+    setConfig(prev => ({
+      ...prev,
+      scheduleStart: start,
+      scheduleEnd: end,
+    }));
+  }, []);
+
+  const getThemeConfig = useCallback((): ThemeConfig => config, [config]);
 
   const value: ThemeContextType = {
-    mode,
+    mode: effectiveMode,
+    colorTheme: config.colorTheme,
+    colors: THEMES[config.colorTheme as ColorTheme],
+    autoSwitch: config.autoSwitch,
+    scheduleStart: config.scheduleStart,
+    scheduleEnd: config.scheduleEnd,
     toggleMode,
     setMode,
+    setColorTheme,
+    setAutoSwitch,
+    setSchedule,
+    getThemeConfig,
   };
 
   return (
@@ -55,13 +175,4 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       {children}
     </ThemeContext.Provider>
   );
-};
-
-// eslint-disable-next-line react-refresh/only-export-components
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within ThemeProvider');
-  }
-  return context;
 };
