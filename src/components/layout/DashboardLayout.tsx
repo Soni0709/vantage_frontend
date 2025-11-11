@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import ToastContainer from '../ui/Toast';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../../hooks';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;

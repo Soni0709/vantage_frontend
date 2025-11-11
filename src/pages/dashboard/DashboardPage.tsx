@@ -5,7 +5,7 @@ import { useTransactions, useRecurringTransactions, useSavingsGoals } from '../.
 import { useGetAlertsQuery } from '../../store/api';
 import { formatINR, formatPercentage } from '../../utils';
 import { useToast } from '../../contexts';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../../hooks';
 import { AddTransactionModal } from '../../components/modals';
 import { InsightsSection } from '../../components/dashboard';
 import { UnifiedBudgetDashboard, BudgetCharts } from '../../components/budget';

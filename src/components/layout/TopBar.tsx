@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth, useTheme } from '../../hooks';
 import { useGetAlertsQuery, useMarkAlertReadMutation, useGetSavingsGoalsSummaryQuery } from '../../store/api';
 import { ThemeToggle } from '../ui';
 import type { BudgetAlert } from '../../types';

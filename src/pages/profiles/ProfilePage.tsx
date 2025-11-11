@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAppDispatch, useAuth, useProfile, useAppSelector } from "../../hooks";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useAppDispatch, useAuth, useProfile, useAppSelector, useTheme } from "../../hooks";
 import {
   updateProfile,
   changePassword,

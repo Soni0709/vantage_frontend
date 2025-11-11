@@ -1,7 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { useAuth } from '../../hooks';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth, useTheme } from '../../hooks';
 import { cn } from '../../utils';
 
 interface SidebarProps {
