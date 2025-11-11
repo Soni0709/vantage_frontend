@@ -1,11 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import type { Mode, ColorTheme, AutoSwitch, ThemeConfig, ThemeContextType } from '../types/theme';
-import { THEMES } from '../constants/themes';
+import type { Mode, AutoSwitch, ThemeConfig, ThemeContextType } from '../types/theme';
 import { ThemeContext } from './theme';
 
 const DEFAULT_CONFIG: ThemeConfig = {
   mode: 'dark',
-  colorTheme: 'purple',
   autoSwitch: 'off',
   scheduleStart: 6,
   scheduleEnd: 20,
@@ -25,13 +23,6 @@ const loadAndApplyTheme = (): ThemeConfig => {
     
     // Add the correct mode class
     root.classList.add(config.mode);
-    
-    // Set CSS variables
-    const themeColors = THEMES[config.colorTheme as ColorTheme];
-    root.style.setProperty('--theme-primary', themeColors.primary);
-    root.style.setProperty('--theme-dark', themeColors.dark);
-    root.style.setProperty('--theme-light', themeColors.light);
-    root.style.setProperty('--theme-accent', themeColors.accent);
     
     console.log('Theme loaded from storage:', config);
     return config;
@@ -102,14 +93,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     console.log('HTML class updated to:', effectiveMode);
     console.log('HTML classList:', Array.from(root.classList));
     
-    // Apply theme colors as CSS variables
-    const themeColors = THEMES[config.colorTheme as ColorTheme];
-    root.style.setProperty('--theme-primary', themeColors.primary);
-    root.style.setProperty('--theme-dark', themeColors.dark);
-    root.style.setProperty('--theme-light', themeColors.light);
-    root.style.setProperty('--theme-accent', themeColors.accent);
-    
-    console.log('Theme applied:', { mode: effectiveMode, colorTheme: config.colorTheme });
+    console.log('Theme applied:', { mode: effectiveMode });
     
     // Save to localStorage
     localStorage.setItem('vantage_theme_config', JSON.stringify(config));
@@ -128,13 +112,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       ...prev,
       mode,
       autoSwitch: 'off',
-    }));
-  }, []);
-
-  const setColorTheme = useCallback((colorTheme: ColorTheme) => {
-    setConfig(prev => ({
-      ...prev,
-      colorTheme,
     }));
   }, []);
 
@@ -157,14 +134,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const value: ThemeContextType = {
     mode: effectiveMode,
-    colorTheme: config.colorTheme,
-    colors: THEMES[config.colorTheme as ColorTheme],
     autoSwitch: config.autoSwitch,
     scheduleStart: config.scheduleStart,
     scheduleEnd: config.scheduleEnd,
     toggleMode,
     setMode,
-    setColorTheme,
     setAutoSwitch,
     setSchedule,
     getThemeConfig,
