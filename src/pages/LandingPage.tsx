@@ -42,7 +42,7 @@ const LandingPage: React.FC = () => {
   ];
 
   const stats = [
-    { number: "100%", label: "Free Forever", icon: "🎁" },
+    { number: "100%", label: "Free", icon: "🎁" },
     { number: "₹0", label: "Hidden Fees", icon: "🔒" },
     { number: "256-bit", label: "Encryption", icon: "🛡️" },
     { number: "24/7", label: "Access", icon: "⚡" }
@@ -207,7 +207,7 @@ const LandingPage: React.FC = () => {
                   </div>
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Free Forever</span>
+                      <span className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Free</span>
                       <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>100%</span>
                     </div>
                     <div className={`w-full rounded-full h-2 ${isDark ? 'bg-gray-700' : 'bg-gray-300'}`}>
@@ -302,7 +302,7 @@ const LandingPage: React.FC = () => {
               </Button>
 
               <p className={`text-center text-sm mt-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                No credit card required • Cancel anytime • 100% free forever
+                No credit card required • Cancel anytime • 100% free
               </p>
             </div>
           </div>
@@ -433,7 +433,7 @@ const LandingPage: React.FC = () => {
                 Already a user? Sign In
               </Button>
             </div>
-            <p className={`text-sm mt-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>No credit card required • 100% free forever</p>
+            <p className={`text-sm mt-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>No credit card required • 100% free</p>
           </div>
         </div>
       </section>
